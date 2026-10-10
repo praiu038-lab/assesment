@@ -3,1195 +3,447 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NourishGuard AI — Software Requirements Specification (SRS)</title>
-  <!-- Google Fonts & Font Awesome Icons -->
+  <title>NourishGuard AI — Complete Application Portal & SRS</title>
+  
+  <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Mermaid.js for Diagrams -->
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Application CSS -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Chart.js, Leaflet.js & Mermaid.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-  <style>
-    :root {
-      --bg-primary: #0b0f19;
-      --bg-secondary: #111827;
-      --bg-card: rgba(17, 24, 39, 0.85);
-      --bg-card-hover: rgba(31, 41, 55, 0.95);
-      --border-color: rgba(255, 255, 255, 0.1);
-      --accent-emerald: #10b981;
-      --accent-emerald-glow: rgba(16, 185, 129, 0.25);
-      --accent-cyan: #06b6d4;
-      --accent-amber: #f59e0b;
-      --accent-rose: #f43f5e;
-      --text-main: #f9fafb;
-      --text-muted: #9ca3af;
-      --text-dim: #6b7280;
-      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: var(--bg-primary);
-      color: var(--text-main);
-      line-height: 1.6;
-      background-image: 
-        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
-      background-attachment: fixed;
-      min-height: 100vh;
-    }
-
-    /* Top Navigation Header */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(16px);
-      background: rgba(11, 15, 25, 0.85);
-      border-bottom: 1px solid var(--border-color);
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .brand-logo {
-      width: 42px;
-      height: 42px;
-      background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan));
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #000;
-      font-size: 1.3rem;
-      font-weight: 800;
-      box-shadow: 0 0 20px var(--accent-emerald-glow);
-    }
-
-    .brand-text h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      background: linear-gradient(to right, #fff, #9ca3af);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .brand-text p {
-      font-size: 0.75rem;
-      color: var(--accent-emerald);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .badge {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid var(--accent-emerald);
-      color: var(--accent-emerald);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn-print {
-      background: var(--bg-secondary);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      padding: 8px 16px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.85rem;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-print:hover {
-      background: var(--accent-emerald);
-      color: #000;
-      border-color: var(--accent-emerald);
-    }
-
-    /* Main Container */
-    .container {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 2.5rem 1.5rem;
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 2rem;
-    }
-
-    @media (max-width: 960px) {
-      .container {
-        grid-template-columns: 1fr;
-      }
-      .sidebar {
-        display: none;
-      }
-    }
-
-    /* Sidebar Navigation */
-    .sidebar {
-      position: sticky;
-      top: 90px;
-      height: fit-content;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 1.25rem;
-      box-shadow: var(--glass-shadow);
-      backdrop-filter: blur(12px);
-    }
-
-    .sidebar-title {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .nav-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .nav-item a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.88rem;
-      padding: 8px 12px;
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: all 0.2s;
-    }
-
-    .nav-item a:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    .nav-item.active a {
-      color: #fff;
-      background: linear-gradient(90deg, rgba(16, 185, 129, 0.2), transparent);
-      border-left: 3px solid var(--accent-emerald);
-      font-weight: 600;
-    }
-
-    /* Content Area */
-    .content {
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-    }
-
-    /* Hero Banner */
-    .hero-banner {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15));
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      border-radius: var(--radius-lg);
-      padding: 2.5rem;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.2);
-    }
-
-    .hero-banner::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 300px;
-      height: 300px;
-      background: radial-gradient(circle, var(--accent-emerald-glow) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .hero-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(16, 185, 129, 0.2);
-      border: 1px solid var(--accent-emerald);
-      color: var(--accent-emerald);
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 1rem;
-    }
-
-    .hero-title {
-      font-size: 2.5rem;
-      font-weight: 800;
-      line-height: 1.15;
-      margin-bottom: 0.75rem;
-      letter-spacing: -0.03em;
-    }
-
-    .hero-subtitle {
-      font-size: 1.1rem;
-      color: var(--text-muted);
-      max-width: 750px;
-      margin-bottom: 1.5rem;
-    }
-
-    .hero-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
-
-    .stat-box {
-      background: rgba(17, 24, 39, 0.7);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 1rem;
-      backdrop-filter: blur(8px);
-    }
-
-    .stat-number {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--accent-emerald);
-    }
-
-    .stat-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    /* Section Cards */
-    .section-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 2rem;
-      box-shadow: var(--glass-shadow);
-      backdrop-filter: blur(12px);
-      transition: border-color 0.2s;
-    }
-
-    .section-card:hover {
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .section-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: var(--radius-sm);
-      background: rgba(16, 185, 129, 0.15);
-      color: var(--accent-emerald);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-    }
-
-    .section-header h2 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
-    .section-number {
-      font-size: 0.85rem;
-      color: var(--accent-emerald);
-      font-weight: 700;
-    }
-
-    /* Grid Layouts */
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.25rem;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.25rem;
-    }
-
-    /* Feature / Info Cards */
-    .info-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      transition: transform 0.2s, background 0.2s;
-    }
-
-    .info-card:hover {
-      transform: translateY(-2px);
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(16, 185, 129, 0.3);
-    }
-
-    .info-card-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .info-card-icon {
-      font-size: 1.2rem;
-      color: var(--accent-cyan);
-    }
-
-    .info-card-title {
-      font-weight: 700;
-      font-size: 1rem;
-    }
-
-    .info-card-desc {
-      color: var(--text-muted);
-      font-size: 0.88rem;
-    }
-
-    /* AI Highlights Card */
-    .ai-badge {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
-      border: 1px solid var(--accent-emerald);
-      color: #fff;
-    }
-
-    .ai-feature-card {
-      background: linear-gradient(145deg, rgba(17, 24, 39, 0.95), rgba(6, 78, 59, 0.2));
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      border-radius: var(--radius-md);
-      padding: 1.5rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .ai-feature-card h3 {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1.15rem;
-      color: var(--accent-emerald);
-      margin-bottom: 0.75rem;
-    }
-
-    .ai-detail-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .ai-detail-item h4 {
-      font-size: 0.75rem;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 4px;
-    }
-
-    .ai-detail-item p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    /* Tables */
-    .table-container {
-      overflow-x: auto;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 0.88rem;
-    }
-
-    th {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-main);
-      padding: 12px 16px;
-      font-weight: 700;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    td {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border-color);
-      color: var(--text-muted);
-    }
-
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
-      color: var(--text-main);
-    }
-
-    .role-badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      background: rgba(6, 182, 212, 0.15);
-      border: 1px solid var(--accent-cyan);
-      color: var(--accent-cyan);
-    }
-
-    /* Mermaid Diagrams */
-    .mermaid-wrapper {
-      background: #0d1117;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 1.5rem;
-      overflow-x: auto;
-      display: flex;
-      justify-content: center;
-    }
-
-    /* Interactive Live Demo Pill */
-    .interactive-demo {
-      background: rgba(16, 185, 129, 0.08);
-      border: 1px dashed var(--accent-emerald);
-      border-radius: var(--radius-md);
-      padding: 1.5rem;
-      margin-top: 1rem;
-    }
-
-    .demo-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--accent-emerald);
-      margin-bottom: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .pantry-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 1rem;
-    }
-
-    .pantry-tag {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .expiry-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-    .exp-critical { background: var(--accent-rose); box-shadow: 0 0 8px var(--accent-rose); }
-    .exp-warning { background: var(--accent-amber); box-shadow: 0 0 8px var(--accent-amber); }
-    .exp-fresh { background: var(--accent-emerald); box-shadow: 0 0 8px var(--accent-emerald); }
-
-    .ai-recipe-result {
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: var(--radius-sm);
-      padding: 1rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.82rem;
-      color: #34d399;
-      border-left: 3px solid var(--accent-emerald);
-    }
-
-    /* Footer */
-    footer {
-      border-top: 1px solid var(--border-color);
-      padding: 2rem;
-      text-align: center;
-      color: var(--text-dim);
-      font-size: 0.85rem;
-      background: rgba(11, 15, 25, 0.9);
-      margin-top: 3rem;
-    }
-
-    /* Print View */
-    @media print {
-      body {
-        background: #fff !important;
-        color: #000 !important;
-      }
-      .sidebar, .btn-print, header {
-        display: none !important;
-      }
-      .container {
-        grid-template-columns: 1fr !important;
-        padding: 0 !important;
-      }
-      .section-card {
-        border: 1px solid #ccc !important;
-        background: #fff !important;
-        color: #000 !important;
-        box-shadow: none !important;
-        page-break-inside: avoid;
-        margin-bottom: 1.5rem;
-      }
-    }
-  </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header>
-    <div class="brand">
-      <div class="brand-logo">
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <div class="brand-icon">
         <i class="fa-solid fa-leaf"></i>
       </div>
-      <div class="brand-text">
+      <div class="brand-info">
         <h1>NourishGuard AI</h1>
-        <p>Software Requirements Specification (SRS)</p>
+        <p>Smart-Pantry & Food-Rescue Ecosystem</p>
       </div>
     </div>
-    <div class="header-actions">
-      <div class="badge">
-        <i class="fa-solid fa-award"></i> Assessment Submission
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab-btn active" data-tab="tab-pantry" onclick="switchTab('tab-pantry')">
+        <i class="fa-solid fa-boxes-stacked"></i> Smart Pantry
+      </button>
+      <button class="nav-tab-btn" data-tab="tab-scanner" onclick="switchTab('tab-scanner')">
+        <i class="fa-solid fa-camera-viewfinder"></i> AI Scanner
+      </button>
+      <button class="nav-tab-btn" data-tab="tab-recipes" onclick="switchTab('tab-recipes')">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Chef
+      </button>
+      <button class="nav-tab-btn" data-tab="tab-rescue" onclick="switchTab('tab-rescue')">
+        <i class="fa-solid fa-map-location-dot"></i> Rescue Map
+      </button>
+      <button class="nav-tab-btn" data-tab="tab-analytics" onclick="switchTab('tab-analytics')">
+        <i class="fa-solid fa-chart-line"></i> Analytics
+      </button>
+      <button class="nav-tab-btn" data-tab="tab-srs" onclick="switchTab('tab-srs')">
+        <i class="fa-solid fa-file-lines"></i> SRS Document
+      </button>
+    </nav>
+
+    <!-- User Profile & Action -->
+    <div class="header-right">
+      <div class="user-badge">
+        <div class="user-avatar">Y</div>
+        <span>Household Admin</span>
       </div>
-      <button class="btn-print" onclick="window.print()">
-        <i class="fa-solid fa-print"></i> Export / Print SRS
+      <button class="btn btn-secondary btn-sm" onclick="window.print()" title="Export / Print SRS Document">
+        <i class="fa-solid fa-print"></i>
       </button>
     </div>
   </header>
 
-  <div class="container">
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-      <div class="sidebar-title">SRS Navigation</div>
-      <ul class="nav-list">
-        <li class="nav-item active"><a href="#title"><i class="fa-solid fa-heading"></i> 1. Title & Overview</a></li>
-        <li class="nav-item"><a href="#problem"><i class="fa-solid fa-circle-exclamation"></i> 2. Problem Statement</a></li>
-        <li class="nav-item"><a href="#solution"><i class="fa-solid fa-lightbulb"></i> 3. Proposed Solution</a></li>
-        <li class="nav-item"><a href="#target-users"><i class="fa-solid fa-users"></i> 4. Target Users</a></li>
-        <li class="nav-item"><a href="#objectives"><i class="fa-solid fa-bullseye"></i> 5. Objectives</a></li>
-        <li class="nav-item"><a href="#functional"><i class="fa-solid fa-list-check"></i> 6. Functional Req.</a></li>
-        <li class="nav-item"><a href="#non-functional"><i class="fa-solid fa-shield-halved"></i> 7. Non-Functional</a></li>
-        <li class="nav-item"><a href="#ai-features"><i class="fa-solid fa-robot"></i> 8. AI Features (Mandatory)</a></li>
-        <li class="nav-item"><a href="#modules"><i class="fa-solid fa-cubes"></i> 9. Modules</a></li>
-        <li class="nav-item"><a href="#user-roles"><i class="fa-solid fa-id-badge"></i> 10. User Roles</a></li>
-        <li class="nav-item"><a href="#inputs-outputs"><i class="fa-solid fa-right-left"></i> 11. Inputs & Outputs</a></li>
-        <li class="nav-item"><a href="#architecture"><i class="fa-solid fa-network-wired"></i> 12. Architecture</a></li>
-        <li class="nav-item"><a href="#use-case"><i class="fa-solid fa-diagram-project"></i> 13. Use Case Diagram</a></li>
-        <li class="nav-item"><a href="#future"><i class="fa-solid fa-rocket"></i> 15. Future Enhancements</a></li>
-        <li class="nav-item"><a href="#benefits"><i class="fa-solid fa-seedling"></i> 16. Expected Benefits</a></li>
-      </ul>
-    </aside>
+  <!-- Main Container -->
+  <main class="app-container">
 
-    <!-- Main Content -->
-    <main class="content">
-
-      <!-- Hero Banner / 1. Title -->
-      <section id="title" class="hero-banner">
-        <span class="hero-tag"><i class="fa-solid fa-sparkles"></i> AI-Powered Daily Life Solution</span>
-        <h1 class="hero-title">NourishGuard AI</h1>
-        <p class="hero-subtitle">
-          An intelligent smart-pantry management, computer-vision receipt ingestion, predictive zero-waste recipe generation, and hyperlocal community food rescue ecosystem.
-        </p>
-
-        <div class="hero-stats">
-          <div class="stat-box">
-            <div class="stat-number">40%</div>
-            <div class="stat-label">Target Waste Reduction</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-number">&lt; 4s</div>
-            <div class="stat-label">AI Receipt & OCR Scan</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-number">$1,800</div>
-            <div class="stat-label">Avg. Annual Family Savings</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-number">Zero</div>
-            <div class="stat-label">Landfill Methane Target</div>
-          </div>
+    <!-- Global Key Metric Stats Strip -->
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="stat-icon-wrap stat-rose">
+          <i class="fa-solid fa-triangle-exclamation"></i>
         </div>
-      </section>
-
-      <!-- 2. Problem Statement -->
-      <section id="problem" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
-          <div>
-            <div class="section-number">Section 02</div>
-            <h2>Problem Statement</h2>
-          </div>
+        <div class="stat-details">
+          <div class="value" id="stat-critical-count">2</div>
+          <div class="label">Expiring in &le; 2 Days</div>
         </div>
+      </div>
 
-        <div class="grid-3">
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-triangle-exclamation info-card-icon" style="color: var(--accent-rose);"></i>
-              <div class="info-card-title">What Problem?</div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap stat-amber">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+        <div class="stat-details">
+          <div class="value" id="stat-warning-count">2</div>
+          <div class="label">Use Within 5 Days</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrap stat-emerald">
+          <i class="fa-solid fa-seedling"></i>
+        </div>
+        <div class="stat-details">
+          <div class="value" id="stat-fresh-count">2</div>
+          <div class="label">Fresh Long-Shelf Items</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrap stat-cyan">
+          <i class="fa-solid fa-piggy-bank"></i>
+        </div>
+        <div class="stat-details">
+          <div class="value" id="stat-savings-val">$148.50</div>
+          <div class="label">Total Grocery $ Saved</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- TAB 1: SMART PANTRY INVENTORY & ADD FORM       -->
+    <!-- ============================================== -->
+    <section id="tab-pantry" class="tab-content active">
+      <div class="panel-grid">
+        
+        <!-- Left: Quick Add Form -->
+        <div class="glass-panel">
+          <div class="panel-title-row">
+            <div class="panel-title">
+              <i class="fa-solid fa-plus-circle" style="color: var(--emerald-400);"></i> Add Item
             </div>
-            <p class="info-card-desc">
-              Over <strong>1/3rd of all food produced globally is wasted</strong>. Over 60% of this waste happens at the household level due to forgotten expiration dates, poor meal planning, and lack of easy food donation channels.
+            <button class="btn btn-secondary btn-sm" onclick="switchTab('tab-scanner')">
+              <i class="fa-solid fa-camera"></i> AI Scan
+            </button>
+          </div>
+
+          <form id="add-item-form" onsubmit="handleAddItem(event)">
+            <div class="form-group">
+              <label class="form-label">Item Name</label>
+              <input type="text" id="item-name-input" class="form-input" placeholder="e.g., Cherry Tomatoes" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select id="item-category-input" class="form-select">
+                <option value="Produce">Produce / Fresh Greens</option>
+                <option value="Dairy">Dairy & Eggs</option>
+                <option value="Bakery">Bakery & Breads</option>
+                <option value="Pantry">Pantry Essentials & Grains</option>
+                <option value="Proteins">Meat / Fish / Tofu</option>
+                <option value="Beverages">Beverages & Juices</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Quantity & Unit</label>
+              <input type="text" id="item-qty-input" class="form-input" placeholder="e.g., 500g or 1 Box">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Storage Location</label>
+              <select id="item-loc-input" class="form-select">
+                <option value="Fridge">Refrigerator (Fridge)</option>
+                <option value="Freezer">Freezer</option>
+                <option value="Pantry">Cabinet / Pantry</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Expiration Date</label>
+              <input type="date" id="item-exp-input" class="form-input" value="2026-10-15" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              <i class="fa-solid fa-plus"></i> Save to Pantry
+            </button>
+          </form>
+        </div>
+
+        <!-- Right: Inventory List & Filters -->
+        <div class="glass-panel">
+          <div class="pantry-controls">
+            <div class="search-bar">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" class="form-input" placeholder="Search groceries, ingredients or categories..." oninput="handleSearch(event)">
+            </div>
+
+            <div class="filter-pills">
+              <button class="filter-pill active" data-filter="all" onclick="setFilter('all')">All Items</button>
+              <button class="filter-pill" data-filter="critical" onclick="setFilter('critical')">Urgent (&le; 2d)</button>
+              <button class="filter-pill" data-filter="warning" onclick="setFilter('warning')">Use Soon</button>
+              <button class="filter-pill" data-filter="fresh" onclick="setFilter('fresh')">Fresh</button>
+              <button class="filter-pill" data-filter="fridge" onclick="setFilter('fridge')">Fridge</button>
+              <button class="filter-pill" data-filter="pantry" onclick="setFilter('pantry')">Pantry</button>
+            </div>
+          </div>
+
+          <!-- Cards Grid -->
+          <div id="pantry-cards-container" class="inventory-grid">
+            <!-- Rendered dynamically by app.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 2: AI MULTI-MODAL RECEIPT & PANTRY SCANNER -->
+    <!-- ============================================== -->
+    <section id="tab-scanner" class="tab-content">
+      <div class="glass-panel" style="max-width: 900px; margin: 0 auto;">
+        <div class="panel-title-row">
+          <div>
+            <div class="panel-title">
+              <i class="fa-solid fa-camera-viewfinder" style="color: var(--cyan-400);"></i> Multi-Modal AI Ingestion Scanner
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
+              Powered by Transformer TrOCR & YOLOv8 Freshness Classifier. Ingest 20+ items in under 4 seconds without typing.
             </p>
           </div>
-
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-users info-card-icon" style="color: var(--accent-amber);"></i>
-              <div class="info-card-title">Who Faces It?</div>
-            </div>
-            <p class="info-card-desc">
-              Busy working professionals, families, students, and local grocers who buy fresh items in batches but discard them when spoiled, while nearby low-income shelters face constant food shortages.
-            </p>
-          </div>
-
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-earth-americas info-card-icon" style="color: var(--accent-cyan);"></i>
-              <div class="info-card-title">Why Is It Important?</div>
-            </div>
-            <p class="info-card-desc">
-              Food waste generates 8-10% of global greenhouse emissions (potent methane gas in landfills) and costs an average family $1,500–$2,200 annually while hunger remains pervasive in local communities.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 3. Proposed Solution -->
-      <section id="solution" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-lightbulb"></i></div>
-          <div>
-            <div class="section-number">Section 03</div>
-            <h2>Proposed Solution</h2>
-          </div>
-        </div>
-        <p style="margin-bottom: 1.25rem; color: var(--text-muted);">
-          <strong>NourishGuard AI</strong> transforms how households manage food through a proactive 3-pillar ecosystem:
-        </p>
-
-        <div class="grid-3">
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-camera info-card-icon"></i>
-              <div class="info-card-title">1. Instant Smart Tracking</div>
-            </div>
-            <p class="info-card-desc">
-              Users snap a quick photo of their grocery receipt or fridge shelf. Vision AI & TrOCR parse item names, categorize them, and compute dynamic expiration dates automatically.
-            </p>
-          </div>
-
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-utensils info-card-icon"></i>
-              <div class="info-card-title">2. Zero-Waste AI Chef</div>
-            </div>
-            <p class="info-card-desc">
-              An LLM culinary engine detects items entering the "yellow/red" expiry zones and generates tailored, step-by-step recipes utilizing exclusively on-hand ingredients.
-            </p>
-          </div>
-
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-hand-holding-heart info-card-icon"></i>
-              <div class="info-card-title">3. Hyperlocal Rescue</div>
-            </div>
-            <p class="info-card-desc">
-              When food cannot be consumed in time, a 1-tap donation button broadcasts the surplus to verified local shelters, NGOs, and neighbors on a live interactive map for rapid pickup.
-            </p>
-          </div>
         </div>
 
-        <!-- Interactive AI Simulation Preview -->
-        <div class="interactive-demo">
-          <div class="demo-title">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Interactive AI Engine Simulation: Live Pantry State
-          </div>
-          <div class="pantry-tags">
-            <span class="pantry-tag"><span class="expiry-indicator exp-critical"></span> Spinach (Leaves) &bull; Expiring in 12h</span>
-            <span class="pantry-tag"><span class="expiry-indicator exp-critical"></span> Greek Yogurt &bull; Expiring in 24h</span>
-            <span class="pantry-tag"><span class="expiry-indicator exp-warning"></span> Bell Pepper &bull; Expiring in 2 days</span>
-            <span class="pantry-tag"><span class="expiry-indicator exp-fresh"></span> Brown Rice &bull; Expiring in 60 days</span>
-          </div>
-          <div class="ai-recipe-result">
-            <strong>🤖 AI Generative Chef Recommendation:</strong><br>
-            <em>"Creamy Garlic-Yogurt Wilted Spinach Bowl over Warm Brown Rice"</em><br>
-            &rarr; Uses 100% of at-risk ingredients (Spinach + Greek Yogurt) &bull; Prep Time: 12 Mins &bull; Waste Saved: 350g ($4.20)
-          </div>
-        </div>
-      </section>
-
-      <!-- 4. Target Users -->
-      <section id="target-users" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-users"></i></div>
-          <div>
-            <div class="section-number">Section 04</div>
-            <h2>Target Users</h2>
-          </div>
-        </div>
-        <div class="grid-2">
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-house-user info-card-icon"></i>
-              <div class="info-card-title">Everyday Households & Families</div>
-            </div>
-            <p class="info-card-desc">Busy parents and homemakers managing multi-member grocery lists and looking to trim monthly food costs.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-graduation-cap info-card-icon"></i>
-              <div class="info-card-title">Students & Young Professionals</div>
-            </div>
-            <p class="info-card-desc">Budget-focused individuals living independently who need quick, effortless meal suggestions with leftovers.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-store info-card-icon"></i>
-              <div class="info-card-title">Local Food Businesses & Bakeries</div>
-            </div>
-            <p class="info-card-desc">Neighborhood artisanal bakeries, cafes, and grocers with unsold day-end surplus items.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-hands-holding-child info-card-icon"></i>
-              <div class="info-card-title">NGOs & Community Shelters</div>
-            </div>
-            <p class="info-card-desc">Registered non-profit food banks that require consistent, verified surplus food donations.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 5. Objectives -->
-      <section id="objectives" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-bullseye"></i></div>
-          <div>
-            <div class="section-number">Section 05</div>
-            <h2>Objectives of the Application</h2>
-          </div>
-        </div>
-        <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px;">
-          <li style="display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
-            <i class="fa-solid fa-circle-check" style="color: var(--accent-emerald);"></i>
-            <span><strong>Reduce Household Food Waste by 40%:</strong> Provide early warning alerts and proactive consumption reminders before food spoils.</span>
-          </li>
-          <li style="display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
-            <i class="fa-solid fa-circle-check" style="color: var(--accent-emerald);"></i>
-            <span><strong>Save 15–25% on Monthly Grocery Bills:</strong> Prevent accidental over-purchasing and maximize ingredient longevity.</span>
-          </li>
-          <li style="display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
-            <i class="fa-solid fa-circle-check" style="color: var(--accent-emerald);"></i>
-            <span><strong>Automate Data Ingestion via AI OCR:</strong> Ingest 20+ grocery items from a paper receipt or photo in under 4 seconds.</span>
-          </li>
-          <li style="display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
-            <i class="fa-solid fa-circle-check" style="color: var(--accent-emerald);"></i>
-            <span><strong>Enable 30-Minute Food Redistribution:</strong> Connect surplus edible food to local shelters within a 5 km radius seamlessly.</span>
-          </li>
-          <li style="display: flex; align-items: center; gap: 12px; font-size: 0.95rem;">
-            <i class="fa-solid fa-circle-check" style="color: var(--accent-emerald);"></i>
-            <span><strong>Promote Sustainability Literacy:</strong> Measure and reward reduced carbon footprint with community impact badges.</span>
-          </li>
-        </ul>
-      </section>
-
-      <!-- 6. Functional Requirements -->
-      <section id="functional" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-list-check"></i></div>
-          <div>
-            <div class="section-number">Section 06</div>
-            <h2>Functional Requirements</h2>
-          </div>
-        </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Req ID</th>
-                <th>Feature Module</th>
-                <th>Description & Functional Behavior</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>FR-01</strong></td>
-                <td>Authentication & Profiles</td>
-                <td>Users can register, log in via OAuth 2.0 (Google/Apple), and configure household size and dietary restrictions.</td>
-              </tr>
-              <tr>
-                <td><strong>FR-02</strong></td>
-                <td>Multi-Modal Ingestion</td>
-                <td>Support receipt scanning (OCR), barcode lookup (UPC/EAN), fridge shelf photo scanning, and manual quick-add.</td>
-              </tr>
-              <tr>
-                <td><strong>FR-03</strong></td>
-                <td>Smart Inventory Dashboard</td>
-                <td>Categorized shelf inventory with color-coded countdown bars (Fresh, Expiring Soon, Critical).</td>
-              </tr>
-              <tr>
-                <td><strong>FR-04</strong></td>
-                <td>Predictive Recipe Engine</td>
-                <td>Generate dynamic step-by-step recipes prioritizing expiring ingredients with substitution options.</td>
-              </tr>
-              <tr>
-                <td><strong>FR-05</strong></td>
-                <td>Hyperlocal Food Rescue Map</td>
-                <td>Interactive map showing surplus food listings with 1-tap claim, reservation, and verification tokens.</td>
-              </tr>
-              <tr>
-                <td><strong>FR-06</strong></td>
-                <td>Smart Notification Engine</td>
-                <td>Push alerts for items approaching expiration and warning alerts when duplicate items are scanned in-store.</td>
-              </tr>
-              <tr>
-                <td><strong>FR-07</strong></td>
-                <td>Analytics & Impact Reports</td>
-                <td>Calculates financial savings, weight of diverted food (kg), and CO₂ emission reductions with exportable PDFs.</td>
-              </tr>
-              <tr>
-                <td><strong>FR-08</strong></td>
-                <td>Admin & Moderation Panel</td>
-                <td>Allows platform administrators to verify NGO tax exemptions and monitor food safety compliance flags.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 7. Non-Functional Requirements -->
-      <section id="non-functional" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-shield-halved"></i></div>
-          <div>
-            <div class="section-number">Section 07</div>
-            <h2>Non-Functional Requirements</h2>
-          </div>
-        </div>
-        <div class="grid-2">
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-lock info-card-icon" style="color: var(--accent-emerald);"></i>
-              <div class="info-card-title">Security & Privacy</div>
-            </div>
-            <p class="info-card-desc">End-to-end TLS 1.3 encryption, AES-256 database storage, JWT tokens in HTTP-only cookies, and strict GDPR/CCPA privacy compliance.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-bolt info-card-icon" style="color: var(--accent-amber);"></i>
-              <div class="info-card-title">Performance & Latency</div>
-            </div>
-            <p class="info-card-desc">API latency &lt; 300ms for 95% of queries; AI receipt OCR parsing completes within 2.5 seconds on mobile.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-server info-card-icon" style="color: var(--accent-cyan);"></i>
-              <div class="info-card-title">Scalability & Uptime</div>
-            </div>
-            <p class="info-card-desc">99.9% uptime SLA with autoscaling microservices pods handling 500k+ daily concurrent users.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-mobile-screen info-card-icon" style="color: #a855f7;"></i>
-              <div class="info-card-title">Usability & Offline Support</div>
-            </div>
-            <p class="info-card-desc">Adheres to WCAG 2.1 AA accessibility standards, dark/light theme, and offline cached pantry view for low-connectivity zones.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 8. AI Feature (Mandatory) -->
-      <section id="ai-features" class="section-card">
-        <div class="section-header">
-          <div class="section-icon" style="background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan);"><i class="fa-solid fa-robot"></i></div>
-          <div>
-            <div class="section-number">Section 08 (Mandatory Requirement)</div>
-            <h2>Artificial Intelligence (AI) Features</h2>
-          </div>
-        </div>
-
-        <div class="ai-feature-card">
-          <h3><i class="fa-solid fa-eye"></i> Feature 1: Multi-Modal Receipt & Pantry Vision Scanner</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">
-            Combines Transformer-based Optical Character Recognition (TrOCR) with YOLOv8 produce object detection models.
+        <!-- Scanner Dropzone -->
+        <div class="scanner-dropzone" onclick="startScannerSimulation('receipt')">
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size: 3rem; color: var(--emerald-400); margin-bottom: 1rem;"></i>
+          <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 6px;">Drop receipt photo or fridge tray image here</h3>
+          <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 480px; margin: 0 auto 1.5rem;">
+            Supports JPG, PNG, PDF digital supermarket receipts & internal camera streams.
           </p>
-          <div class="ai-detail-grid">
-            <div class="ai-detail-item">
-              <h4>What AI is used?</h4>
-              <p>Vision-Language Foundation Models + TrOCR + Convolutional Freshness Classifiers.</p>
-            </div>
-            <div class="ai-detail-item">
-              <h4>Why is it needed?</h4>
-              <p>Eliminates the #1 reason users abandon pantry apps: tedious manual typing of 30 grocery items.</p>
-            </div>
-            <div class="ai-detail-item">
-              <h4>How it helps users?</h4>
-              <p>Snaps a receipt or fridge photo; automatically extracts names, quantities, and auto-computes shelf-life in seconds.</p>
-            </div>
+
+          <button class="btn btn-primary" onclick="event.stopPropagation(); startScannerSimulation('receipt')">
+            <i class="fa-solid fa-file-invoice-dollar"></i> Click to Simulate Receipt Scan
+          </button>
+        </div>
+
+        <!-- Presets -->
+        <div class="scan-presets">
+          <span style="font-size: 0.85rem; color: var(--text-secondary); align-self: center; font-weight: 600;">Or try sample presets:</span>
+          <button class="preset-btn" onclick="startScannerSimulation('receipt')">
+            <i class="fa-solid fa-receipt" style="color: var(--cyan-400);"></i> Supermarket Receipt (5 Items)
+          </button>
+          <button class="preset-btn" onclick="startScannerSimulation('fridge')">
+            <i class="fa-solid fa-camera" style="color: var(--emerald-400);"></i> Fridge Veggie Tray (4 Items)
+          </button>
+        </div>
+
+        <!-- Progress Box -->
+        <div id="scan-progress-box" class="scan-progress-box">
+          <div style="font-size: 1rem; font-weight: 700; color: var(--emerald-400);">
+            <i class="fa-solid fa-microchip fa-spin"></i> Neural Vision Engine Active
+          </div>
+          <div class="progress-bar-container">
+            <div id="scan-progress-bar" class="progress-bar-fill"></div>
+          </div>
+          <div id="scan-status-msg" style="font-size: 0.82rem; color: var(--text-secondary); font-family: var(--font-mono);">
+            Initializing neural network...
           </div>
         </div>
 
-        <div class="ai-feature-card">
-          <h3><i class="fa-solid fa-kitchen-set"></i> Feature 2: Generative "Zero-Waste Chef" Recipe Engine</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">
-            Fine-tuned LLM with Retrieval-Augmented Generation (RAG) mapped to a verified culinary knowledge graph.
+        <!-- Extracted Results Box -->
+        <div id="scan-results-box" style="display: none; margin-top: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--emerald-400);">
+              <i class="fa-solid fa-list-check"></i> Extracted Items Ready for Ingestion
+            </h4>
+            <button class="btn btn-primary btn-sm" onclick="commitScannedItems()">
+              <i class="fa-solid fa-file-import"></i> Import All to Pantry
+            </button>
+          </div>
+          <div id="scan-extracted-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 3: ZERO-WASTE AI CHEF (RECIPE ENGINE)      -->
+    <!-- ============================================== -->
+    <section id="tab-recipes" class="tab-content">
+      <div class="recipe-hero">
+        <div>
+          <h2 style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em;">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--emerald-400);"></i> Generative Zero-Waste Chef
+          </h2>
+          <p style="color: var(--text-secondary); font-size: 0.92rem; max-width: 600px; margin-top: 4px;">
+            AI analyzes ingredients nearing expiration and constructs custom gourmet recipes with step-by-step guidance.
           </p>
-          <div class="ai-detail-grid">
-            <div class="ai-detail-item">
-              <h4>What AI is used?</h4>
-              <p>Specialized Culinary LLM + Vector Similarity Search (Milvus/pgvector).</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <input type="text" id="custom-ingredient-filter" class="form-input" style="width: 220px;" placeholder="Filter by ingredient...">
+          <button class="btn btn-primary" onclick="generateRecipes()">
+            <i class="fa-solid fa-rotate"></i> Refresh AI Recipes
+          </button>
+        </div>
+      </div>
+
+      <!-- Recipe Cards Grid -->
+      <div id="recipe-results-container" class="recipe-card-list">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 4: HYPERLOCAL FOOD RESCUE MAP              -->
+    <!-- ============================================== -->
+    <section id="tab-rescue" class="tab-content">
+      <div class="panel-grid">
+        <!-- Left: Live Food Listings -->
+        <div class="glass-panel">
+          <div class="panel-title-row">
+            <div>
+              <div class="panel-title">
+                <i class="fa-solid fa-hand-holding-heart" style="color: var(--cyan-400);"></i> Surplus Food Feed
+              </div>
+              <p style="font-size: 0.78rem; color: var(--text-secondary);">Nearby shelters, bakeries & donors within 5 km</p>
             </div>
-            <div class="ai-detail-item">
-              <h4>Why is it needed?</h4>
-              <p>Overcomes "fridge paralysis" when users have 3 random at-risk ingredients and don't know how to cook them.</p>
-            </div>
-            <div class="ai-detail-item">
-              <h4>How it helps users?</h4>
-              <p>Dynamically constructs delicious recipes using at-risk items with exact step-by-step cooking instructions and smart substitutions.</p>
-            </div>
+            <span class="badge" style="border-color: var(--cyan-400); color: var(--cyan-400);">Live GPS</span>
+          </div>
+
+          <div id="community-donation-feed" class="donation-feed">
+            <!-- Rendered dynamically -->
           </div>
         </div>
 
-        <div class="ai-feature-card">
-          <h3><i class="fa-solid fa-route"></i> Feature 3: Predictive Spoilage & Dynamic Redistribution Matcher</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">
-            Predictive Machine Learning (Gradient Boosted Trees) + Geospatial K-Means Cluster Routing.
-          </p>
-          <div class="ai-detail-grid">
-            <div class="ai-detail-item">
-              <h4>What AI is used?</h4>
-              <p>Household Consumption Velocity Predictor + Geospatial Routing AI.</p>
+        <!-- Right: Leaflet Map -->
+        <div class="glass-panel">
+          <div class="panel-title-row">
+            <div class="panel-title">
+              <i class="fa-solid fa-map-location-dot" style="color: var(--emerald-400);"></i> Hyperlocal Rescue Map
             </div>
-            <div class="ai-detail-item">
-              <h4>Why is it needed?</h4>
-              <p>Predicts if an item will expire before the family finishes it, proactively suggesting charity pickup.</p>
+            <button class="btn btn-secondary btn-sm" onclick="switchTab('tab-pantry')">
+              <i class="fa-solid fa-plus"></i> Donate From Pantry
+            </button>
+          </div>
+
+          <div id="leaflet-map-view" class="map-container"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 5: SUSTAINABILITY & SAVINGS ANALYTICS      -->
+    <!-- ============================================== -->
+    <section id="tab-analytics" class="tab-content">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        
+        <!-- Monthly Savings Chart -->
+        <div class="glass-panel">
+          <div class="panel-title-row">
+            <div class="panel-title">
+              <i class="fa-solid fa-arrow-trend-up" style="color: var(--emerald-400);"></i> Monthly Grocery Savings ($)
             </div>
-            <div class="ai-detail-item">
-              <h4>How it helps users?</h4>
-              <p>Matches donors with the closest verified food bank and creates an optimal pickup window with zero wasted travel.</p>
+            <span class="badge">+22% vs Last Mo</span>
+          </div>
+          <canvas id="monthlySavingsChart" height="200"></canvas>
+        </div>
+
+        <!-- Waste Category Breakdown -->
+        <div class="glass-panel">
+          <div class="panel-title-row">
+            <div class="panel-title">
+              <i class="fa-solid fa-chart-pie" style="color: var(--cyan-400);"></i> Food Waste Diverted by Category
             </div>
           </div>
+          <canvas id="categoryBreakdownChart" height="200"></canvas>
         </div>
-      </section>
+      </div>
 
-      <!-- 9. Modules of the Application -->
-      <section id="modules" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-cubes"></i></div>
+      <!-- Sustainability Impact Milestone Badges -->
+      <div class="glass-panel">
+        <div class="panel-title-row">
+          <div class="panel-title">
+            <i class="fa-solid fa-award" style="color: var(--amber-400);"></i> Sustainability Badges & Milestones
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--emerald-500); border-radius: var(--radius-md); padding: 1.25rem; text-align: center;">
+            <i class="fa-solid fa-medal" style="font-size: 2.2rem; color: var(--emerald-400); margin-bottom: 0.5rem;"></i>
+            <h4 style="font-weight: 700;">Zero-Waste Champion</h4>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Diverted over 30 kg of food from municipal landfills.</p>
+          </div>
+
+          <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid var(--cyan-500); border-radius: var(--radius-md); padding: 1.25rem; text-align: center;">
+            <i class="fa-solid fa-heart-circle-check" style="font-size: 2.2rem; color: var(--cyan-400); margin-bottom: 0.5rem;"></i>
+            <h4 style="font-weight: 700;">Community Hero</h4>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Shared 5+ meals with verified local shelters.</p>
+          </div>
+
+          <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--amber-500); border-radius: var(--radius-md); padding: 1.25rem; text-align: center;">
+            <i class="fa-solid fa-kitchen-set" style="font-size: 2.2rem; color: var(--amber-400); margin-bottom: 0.5rem;"></i>
+            <h4 style="font-weight: 700;">Master AI Chef</h4>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Cooked 12 custom zero-waste AI recipes.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 6: FULL SRS DOCUMENTATION VIEWER          -->
+    <!-- ============================================== -->
+    <section id="tab-srs" class="tab-content">
+      <div class="glass-panel" style="max-width: 1000px; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-subtle);">
           <div>
-            <div class="section-number">Section 09</div>
-            <h2>Modules of the Application</h2>
+            <h2 style="font-size: 1.5rem; font-weight: 800;"><i class="fa-solid fa-file-contract" style="color: var(--emerald-400);"></i> Software Requirements Specification (SRS)</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Comprehensive IEEE-830 Compliant Specification Document</p>
           </div>
+          <button class="btn btn-primary" onclick="window.print()">
+            <i class="fa-solid fa-print"></i> Export / Print Document
+          </button>
         </div>
-        <div class="grid-3">
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-user-shield info-card-icon"></i>
-              <div class="info-card-title">1. User & Auth Module</div>
-            </div>
-            <p class="info-card-desc">OAuth2 registration, user dietary profile preferences, and role switching.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-boxes-stacked info-card-icon"></i>
-              <div class="info-card-title">2. Smart Pantry Module</div>
-            </div>
-            <p class="info-card-desc">Digital inventory shelf catalog, visual expiry countdown, and stock level sync.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-microchip-ai info-card-icon"></i>
-              <div class="info-card-title">3. AI Vision Ingestion</div>
-            </div>
-            <p class="info-card-desc">Receipt OCR parser, barcode barcode-engine, and produce freshness classifier.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-mortar-pestle info-card-icon"></i>
-              <div class="info-card-title">4. Recipe AI Module</div>
-            </div>
-            <p class="info-card-desc">LLM-based zero-waste meal generator, culinary substitution, and nutrition calculator.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-map-location-dot info-card-icon"></i>
-              <div class="info-card-title">5. Food Rescue Map</div>
-            </div>
-            <p class="info-card-desc">Hyperlocal donation listings, GPS claim reservation, and pickup QR verification.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-chart-pie info-card-icon"></i>
-              <div class="info-card-title">6. Analytics & Impact</div>
-            </div>
-            <p class="info-card-desc">Financial grocery savings calculator, carbon credit badges, and PDF waste audit reports.</p>
-          </div>
-        </div>
-      </section>
 
-      <!-- 10. User Roles -->
-      <section id="user-roles" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-id-badge"></i></div>
+        <div style="display: flex; flex-direction: column; gap: 1.5rem; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;">
           <div>
-            <div class="section-number">Section 10</div>
-            <h2>User Roles & Access Control</h2>
+            <h3 style="color: #fff; font-size: 1.15rem; margin-bottom: 6px;">1. Title of the Application</h3>
+            <p><strong style="color: var(--emerald-400);">NourishGuard AI:</strong> Intelligent Smart-Pantry Management, Predictive Recipe Generation & Community Food-Rescue Ecosystem.</p>
           </div>
-        </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>User Role</th>
-                <th>Target Persona</th>
-                <th>Core Permissions & Privileges</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><span class="role-badge">Household User</span></td>
-                <td>Individual / Family Member</td>
-                <td>Scan receipts, manage private pantry, receive alerts, generate AI recipes, list donations, view personal savings.</td>
-              </tr>
-              <tr>
-                <td><span class="role-badge" style="border-color: var(--accent-emerald); color: var(--accent-emerald);">NGO Coordinator</span></td>
-                <td>Shelter / Food Bank Volunteer</td>
-                <td>View bulk food rescue map, reserve surplus donations, coordinate volunteer pickups, issue digital tax acknowledgments.</td>
-              </tr>
-              <tr>
-                <td><span class="role-badge" style="border-color: var(--accent-amber); color: var(--accent-amber);">Commercial Donor</span></td>
-                <td>Bakery / Grocer Manager</td>
-                <td>Batch upload day-end surplus items, schedule recurring NGO pickups, export corporate ESG sustainability records.</td>
-              </tr>
-              <tr>
-                <td><span class="role-badge" style="border-color: var(--accent-rose); color: var(--accent-rose);">System Administrator</span></td>
-                <td>Platform Operations Team</td>
-                <td>Verify NGO charity licenses (KYC), moderate flagged food listings, configure AI model weights, monitor uptime.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
 
-      <!-- 11. Input and Output -->
-      <section id="inputs-outputs" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-right-left"></i></div>
           <div>
-            <div class="section-number">Section 11</div>
-            <h2>Inputs and Outputs</h2>
+            <h3 style="color: #fff; font-size: 1.15rem; margin-bottom: 6px;">2. Problem Statement</h3>
+            <p>Over 1/3rd of all food produced is discarded globally. Households lose $1,500–$2,200 yearly due to forgotten expiration dates, poor meal planning, and lack of immediate community donation channels, generating 8-10% of global greenhouse emissions.</p>
           </div>
-        </div>
-        <div class="grid-2">
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-arrow-right-to-bracket info-card-icon" style="color: var(--accent-cyan);"></i>
-              <div class="info-card-title">System Inputs</div>
-            </div>
-            <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; color: var(--text-muted);">
-              <li>&bull; Photos of grocery paper receipts & digital PDF invoices</li>
-              <li>&bull; Camera photos of refrigerator trays & fruit baskets</li>
-              <li>&bull; Barcode scans (EAN-13, UPC-A)</li>
-              <li>&bull; User dietary restrictions (Vegan, Gluten-Free, Allergies)</li>
-              <li>&bull; GPS device coordinates for hyperlocal donation routing</li>
+
+          <div>
+            <h3 style="color: #fff; font-size: 1.15rem; margin-bottom: 6px;">3. Proposed Solution</h3>
+            <p>A mobile & web platform providing automated OCR receipt and fridge scanning, generative AI recipes using near-expiry ingredients, and a hyperlocal 30-minute food rescue matching network.</p>
+          </div>
+
+          <div>
+            <h3 style="color: #fff; font-size: 1.15rem; margin-bottom: 6px;">8. Artificial Intelligence Features (Mandatory)</h3>
+            <ul style="list-style: disc; margin-left: 1.5rem;">
+              <li><strong>Feature 1:</strong> Transformer TrOCR + YOLOv8 Freshness Computer Vision for automated grocery receipt & fridge ingestion in &lt; 4 seconds.</li>
+              <li><strong>Feature 2:</strong> Generative "Zero-Waste Chef" (LLM + RAG) creating step-by-step custom recipes prioritizing items closest to expiration.</li>
+              <li><strong>Feature 3:</strong> Predictive Spoilage & Dynamic Redistribution Matchmaker (Gradient Boosted Trees + Geospatial K-Means).</li>
             </ul>
           </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-arrow-right-from-bracket info-card-icon" style="color: var(--accent-emerald);"></i>
-              <div class="info-card-title">System Outputs</div>
-            </div>
-            <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; color: var(--text-muted);">
-              <li>&bull; Categorized digital inventory with live expiration countdowns</li>
-              <li>&bull; Proactive push notifications & early spoilage alerts</li>
-              <li>&bull; Tailored step-by-step zero-waste recipes</li>
-              <li>&bull; Hyperlocal donation map with reservation tokens</li>
-              <li>&bull; Financial savings & Carbon offset analytics reports</li>
-            </ul>
-          </div>
-        </div>
-      </section>
 
-      <!-- 12. System Architecture Diagram -->
-      <section id="architecture" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-network-wired"></i></div>
           <div>
-            <div class="section-number">Section 12</div>
-            <h2>System Architecture</h2>
-          </div>
-        </div>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
-          Modern cloud-native architecture showing the data flow across <strong>User &rarr; Application Gateway &rarr; Microservices &rarr; Database &rarr; AI Services</strong>:
-        </p>
-        <div class="mermaid-wrapper">
-          <div class="mermaid">
+            <h3 style="color: #fff; font-size: 1.15rem; margin-bottom: 10px;">12. System Architecture Diagram</h3>
+            <div style="background: #090d16; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; overflow-x: auto;">
+              <div class="mermaid">
 flowchart TD
     subgraph ClientLayer["1. Client Layer"]
         Mobile["📱 Mobile App (iOS / Android)"]
         Web["💻 Web App (PWA)"]
     end
 
-    subgraph GatewayLayer["2. Gateway & Auth"]
+    subgraph GatewayLayer["2. API Gateway & Security"]
         Gateway["🛡️ API Gateway (TLS 1.3 / Rate Limiter)"]
         Auth["🔑 OAuth 2.0 & JWT Auth"]
     end
@@ -1237,24 +489,14 @@ flowchart TD
     NotifSvc --> Redis
     RescueSvc --> Postgres
     AnalyticsSvc --> Postgres
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
 
-      <!-- 13. Use Case Diagram -->
-      <section id="use-case" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-diagram-project"></i></div>
           <div>
-            <div class="section-number">Section 13</div>
-            <h2>Use Case Diagram</h2>
-          </div>
-        </div>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
-          Actor interactions across Household Users, NGO Coordinators, and System Administrators:
-        </p>
-        <div class="mermaid-wrapper">
-          <div class="mermaid">
+            <h3 style="color: #fff; font-size: 1.15rem; margin-bottom: 10px;">13. Use Case Diagram</h3>
+            <div style="background: #090d16; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.5rem; overflow-x: auto;">
+              <div class="mermaid">
 flowchart LR
     User((Household User))
     NGO((NGO Coordinator))
@@ -1287,132 +529,55 @@ flowchart LR
 
     Admin --> UC9
     Admin --> UC10
+              </div>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- 15. Future Enhancements -->
-      <section id="future" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-rocket"></i></div>
-          <div>
-            <div class="section-number">Section 15</div>
-            <h2>Future Enhancements</h2>
-          </div>
-        </div>
-        <div class="grid-2">
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-satellite-dish info-card-icon"></i>
-              <div class="info-card-title">IoT Smart Fridge Integration</div>
-            </div>
-            <p class="info-card-desc">Direct API sync with Samsung SmartThings and LG ThinQ smart refrigerators to auto-read internal inventory cameras without manual photos.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-scale-balanced info-card-icon"></i>
-              <div class="info-card-title">NourishScale (Smart Trash Attachment)</div>
-            </div>
-            <p class="info-card-desc">A smart kitchen bin load-cell sensor that detects and weighs discarded organic matter, giving accurate audit logs on what spoiled.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-coins info-card-icon"></i>
-              <div class="info-card-title">Carbon Credit Marketplace</div>
-            </div>
-            <p class="info-card-desc">Tokenize verified food waste diverted into eco-credits redeemable for discounts on public transit and organic groceries.</p>
-          </div>
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="fa-solid fa-microphone-lines info-card-icon"></i>
-              <div class="info-card-title">Hands-Free Kitchen Voice AI</div>
-            </div>
-            <p class="info-card-desc">Multilingual offline voice assistant to guide users through zero-waste recipes step-by-step while hands are busy cooking.</p>
-          </div>
-        </div>
-      </section>
+  </main>
 
-      <!-- 16. Expected Benefits -->
-      <section id="benefits" class="section-card">
-        <div class="section-header">
-          <div class="section-icon"><i class="fa-solid fa-seedling"></i></div>
-          <div>
-            <div class="section-number">Section 16</div>
-            <h2>Expected Benefits</h2>
-          </div>
+  <!-- Modal: Donation Claim Token Verification -->
+  <div id="claim-modal" class="modal-overlay">
+    <div class="modal-box">
+      <button class="modal-close-btn" onclick="closeClaimModal()"><i class="fa-solid fa-xmark"></i></button>
+      <div style="text-align: center;">
+        <div style="width: 56px; height: 56px; background: rgba(16, 185, 129, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: var(--emerald-400); font-size: 1.6rem;">
+          <i class="fa-solid fa-qrcode"></i>
         </div>
-        <div class="grid-2">
-          <div class="info-card" style="border-left: 3px solid var(--accent-cyan);">
-            <div class="info-card-header">
-              <i class="fa-solid fa-wallet info-card-icon" style="color: var(--accent-cyan);"></i>
-              <div class="info-card-title">Benefits to Users</div>
-            </div>
-            <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; color: var(--text-muted);">
-              <li>&bull; <strong>Direct Savings:</strong> Save $100–$180 monthly by eliminating food spoilage.</li>
-              <li>&bull; <strong>Time Saving:</strong> Zero meal decision paralysis with instantaneous recipes.</li>
-              <li>&bull; <strong>Healthier Nutrition:</strong> Consume fresh food at peak nutrient density.</li>
-            </ul>
-          </div>
-          <div class="info-card" style="border-left: 3px solid var(--accent-emerald);">
-            <div class="info-card-header">
-              <i class="fa-solid fa-globe info-card-icon" style="color: var(--accent-emerald);"></i>
-              <div class="info-card-title">Benefits to Society & Environment</div>
-            </div>
-            <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; color: var(--text-muted);">
-              <li>&bull; <strong>Methane Reduction:</strong> Diverts thousands of tons of organic matter from landfills.</li>
-              <li>&bull; <strong>Hunger Relief:</strong> Fast, dignified channel connecting surplus food to shelters.</li>
-              <li>&bull; <strong>Urban Analytics:</strong> Helps local cities plan sustainable food supply chains.</li>
-            </ul>
-          </div>
-        </div>
-      </section>
+        <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 4px;">Donation Reserved!</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">Present this digital pickup token to the donor upon arrival.</p>
 
-    </main>
+        <div style="background: #000; border: 1px dashed var(--emerald-500); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.5rem;">
+          <div id="claim-token-id" style="font-family: var(--font-mono); font-size: 1.8rem; font-weight: 800; color: var(--emerald-400); letter-spacing: 0.15em;">NG-784920</div>
+          <div id="claim-token-title" style="font-weight: 700; margin-top: 6px;">Surplus Artisan Baguettes (x8)</div>
+          <div id="claim-token-donor" style="font-size: 0.8rem; color: var(--text-muted);">Greenfield Bakery &bull; 0.8 km away</div>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%;" onclick="closeClaimModal()">
+          <i class="fa-solid fa-check"></i> Done
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- Footer -->
-  <footer>
-    <p>&copy; 2026 NourishGuard AI &bull; Prepared for Teacher's Assessment by Intelligent Student</p>
-    <p style="margin-top: 4px; font-size: 0.75rem; color: var(--text-dim);">Fully complies with IEEE 830-style Software Requirements Specification guidelines.</p>
-  </footer>
-
+  <!-- JavaScript -->
+  <script src="app.js"></script>
   <script>
-    // Initialize Mermaid Diagrams
     mermaid.initialize({
       startOnLoad: true,
       theme: 'dark',
       themeVariables: {
         darkMode: true,
-        background: '#0d1117',
+        background: '#090d16',
         primaryColor: '#10b981',
-        primaryTextColor: '#f9fafb',
+        primaryTextColor: '#f8fafc',
         primaryBorderColor: '#059669',
         lineColor: '#06b6d4',
-        secondaryColor: '#1f2937',
+        secondaryColor: '#1e293b',
         tertiaryColor: '#111827'
       }
-    });
-
-    // Smooth Scroll Spy for Sidebar Navigation
-    const sections = document.querySelectorAll('section');
-    const navItems = document.querySelectorAll('.nav-item');
-
-    window.addEventListener('scroll', () => {
-      let current = '';
-      sections.forEach(section => {
-        const sectionTop = section.offsetTop;
-        if (pageYOffset >= sectionTop - 150) {
-          current = section.getAttribute('id');
-        }
-      });
-
-      navItems.forEach(item => {
-        item.classList.remove('active');
-        const link = item.querySelector('a');
-        if (link.getAttribute('href') === `#${current}`) {
-          item.classList.add('active');
-        }
-      });
     });
   </script>
 </body>
