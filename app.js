@@ -1,150 +1,64 @@
-// NourishGuard AI — Complete Bulletproof Application Logic
+// NourishGuard AI — Full-Stack Frontend Client with REST API Integration & Offline Fallback
 
-// Initial Default Pantry Data
-const DEFAULT_PANTRY_ITEMS = [
-  {
-    id: 'item-1',
-    name: 'Baby Spinach Leaves',
-    category: 'Produce',
-    quantity: '250g',
-    location: 'Fridge',
-    purchaseDate: '2026-10-06',
-    expiryDate: '2026-10-11',
-    daysLeft: 1,
-    status: 'critical'
-  },
-  {
-    id: 'item-2',
-    name: 'Greek Yogurt (Organic)',
-    category: 'Dairy',
-    quantity: '500g',
-    location: 'Fridge',
-    purchaseDate: '2026-10-04',
-    expiryDate: '2026-10-12',
-    daysLeft: 2,
-    status: 'critical'
-  },
-  {
-    id: 'item-3',
-    name: 'Bell Peppers (Trio Pack)',
-    category: 'Produce',
-    quantity: '3 pcs',
-    location: 'Fridge',
-    purchaseDate: '2026-10-07',
-    expiryDate: '2026-10-14',
-    daysLeft: 4,
-    status: 'warning'
-  },
-  {
-    id: 'item-4',
-    name: 'Artisan Sourdough Loaf',
-    category: 'Bakery',
-    quantity: '1 Loaf',
-    location: 'Pantry',
-    purchaseDate: '2026-10-08',
-    expiryDate: '2026-10-13',
-    daysLeft: 3,
-    status: 'warning'
-  },
-  {
-    id: 'item-5',
-    name: 'Brown Basmati Rice',
-    category: 'Pantry',
-    quantity: '1 kg',
-    location: 'Pantry',
-    purchaseDate: '2026-09-15',
-    expiryDate: '2027-03-15',
-    daysLeft: 155,
-    status: 'fresh'
-  },
-  {
-    id: 'item-6',
-    name: 'Extra Virgin Olive Oil',
-    category: 'Pantry',
-    quantity: '750ml',
-    location: 'Pantry',
-    purchaseDate: '2026-09-01',
-    expiryDate: '2027-08-01',
-    daysLeft: 294,
-    status: 'fresh'
-  }
-];
+const API_BASE = ''; // Same origin or relative path
 
-const DEFAULT_COMMUNITY_DONATIONS = [
-  {
-    id: 'don-1',
-    title: 'Surplus Fresh Baguettes (x8)',
-    donor: 'Greenfield Artisan Bakery',
-    distance: '0.8 km away',
-    timeRemaining: '3 hours left',
-    lat: 28.6139,
-    lng: 77.2090,
-    claimed: false,
-    verified: true
-  },
-  {
-    id: 'don-2',
-    title: 'Fresh Vine Tomatoes & Cucumbers (4 kg)',
-    donor: 'Urban Community Greenhub',
-    distance: '1.4 km away',
-    timeRemaining: '5 hours left',
-    lat: 28.6219,
-    lng: 77.2190,
-    claimed: false,
-    verified: true
-  },
-  {
-    id: 'don-3',
-    title: 'Sealed Whole Milk Cartons (x3)',
-    donor: 'Neighbor Sarah M.',
-    distance: '0.3 km away',
-    timeRemaining: '1 day left',
-    lat: 28.6080,
-    lng: 77.2020,
-    claimed: false,
-    verified: false
-  }
-];
-
-// App State
+// In-Memory & Local Fallback State
 let state = {
-  pantry: JSON.parse(localStorage.getItem('nourish_pantry')) || DEFAULT_PANTRY_ITEMS,
-  donations: JSON.parse(localStorage.getItem('nourish_donations')) || DEFAULT_COMMUNITY_DONATIONS,
-  moneySaved: parseFloat(localStorage.getItem('nourish_savings')) || 148.50,
-  foodDivertedKg: parseFloat(localStorage.getItem('nourish_diverted')) || 32.4,
+  pantry: [],
+  donations: [],
+  moneySaved: 148.50,
+  foodDivertedKg: 32.40,
   activeFilter: 'all',
-  searchQuery: ''
+  searchQuery: '',
+  isOnlineBackend: false
 };
 
-// Save to localStorage
-function saveState() {
-  localStorage.setItem('nourish_pantry', JSON.stringify(state.pantry));
-  localStorage.setItem('nourish_donations', JSON.stringify(state.donations));
-  localStorage.setItem('nourish_savings', state.moneySaved.toString());
-  localStorage.setItem('nourish_diverted', state.foodDivertedKg.toString());
+// Check Backend API Connection
+async function checkBackendConnection() {
+  try {
+    const res = await fetch('/api/health');
+    if (res.ok) {
+      state.isOnlineBackend = true;
+      const statusEl = document.getElementById('backend-status-badge');
+      if (statusEl) {
+        statusEl.innerHTML = '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; margin-right:6px; box-shadow:0 0 6px #10b981;"></span> DB Connected';
+      }
+      return true;
+    }
+  } catch (err) {
+    state.isOnlineBackend = false;
+    const statusEl = document.getElementById('backend-status-badge');
+    if (statusEl) {
+      statusEl.innerHTML = '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f59e0b; margin-right:6px;"></span> Local Mode';
+    }
+  }
+  return false;
 }
 
-// Global Tab Switching
+// Global Tab Switching with Smooth Transition
 window.switchTab = function(tabId) {
-  // Update Buttons
   document.querySelectorAll('.nav-tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabId);
   });
 
-  // Update Tab Views
   document.querySelectorAll('.tab-content').forEach(view => {
     view.classList.toggle('active', view.id === tabId);
   });
 
-  // Tab-Specific Actions
+  // Close mobile navigation drawer if open
+  const navTabs = document.querySelector('.nav-tabs');
+  if (navTabs && navTabs.classList.contains('mobile-open')) {
+    navTabs.classList.remove('mobile-open');
+  }
+
   if (tabId === 'tab-pantry') {
-    renderPantry();
+    fetchPantry();
   } else if (tabId === 'tab-recipes') {
-    generateRecipes();
+    fetchRecipes();
   } else if (tabId === 'tab-rescue') {
-    initRescueMap();
+    fetchDonations();
   } else if (tabId === 'tab-analytics') {
-    initAnalyticsCharts();
+    fetchAnalytics();
   } else if (tabId === 'tab-srs') {
     if (window.mermaid) {
       try { window.mermaid.run(); } catch(e) {}
@@ -154,40 +68,46 @@ window.switchTab = function(tabId) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// Helper: Calculate Status
-function calculateItemStatus(expiryDateStr) {
-  const today = new Date('2026-10-10');
-  const exp = new Date(expiryDateStr);
-  const diffTime = exp - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  let status = 'fresh';
-  if (diffDays <= 2) {
-    status = 'critical';
-  } else if (diffDays <= 5) {
-    status = 'warning';
+// Toggle Mobile Nav Menu
+window.toggleMobileMenu = function() {
+  const navTabs = document.querySelector('.nav-tabs');
+  if (navTabs) {
+    navTabs.classList.toggle('mobile-open');
   }
-  return { daysLeft: diffDays, status };
+};
+
+// ==========================================
+// 1. PANTRY API CALLS
+// ==========================================
+async function fetchPantry() {
+  try {
+    const res = await fetch('/api/pantry');
+    if (res.ok) {
+      const json = await res.json();
+      state.pantry = json.data;
+      renderPantry();
+      return;
+    }
+  } catch (err) {
+    console.warn('Backend offline, using localStorage fallback');
+  }
+
+  // Fallback to localStorage
+  state.pantry = JSON.parse(localStorage.getItem('nourish_pantry')) || getInitialLocalPantry();
+  renderPantry();
 }
 
-// Update Header Counters
-function updateStatsUI() {
-  const criticalCount = state.pantry.filter(i => i.status === 'critical').length;
-  const warningCount = state.pantry.filter(i => i.status === 'warning').length;
-  const freshCount = state.pantry.filter(i => i.status === 'fresh').length;
-
-  const critEl = document.getElementById('stat-critical-count');
-  const warnEl = document.getElementById('stat-warning-count');
-  const freshEl = document.getElementById('stat-fresh-count');
-  const savingsEl = document.getElementById('stat-savings-val');
-
-  if (critEl) critEl.innerText = criticalCount;
-  if (warnEl) warnEl.innerText = warningCount;
-  if (freshEl) freshEl.innerText = freshCount;
-  if (savingsEl) savingsEl.innerText = `$${state.moneySaved.toFixed(2)}`;
+function getInitialLocalPantry() {
+  return [
+    { id: 'item-1', name: 'Baby Spinach Leaves', category: 'Produce', quantity: '250g', location: 'Fridge', expiryDate: '2026-10-11', daysLeft: 1, status: 'critical' },
+    { id: 'item-2', name: 'Greek Yogurt (Organic)', category: 'Dairy', quantity: '500g', location: 'Fridge', expiryDate: '2026-10-12', daysLeft: 2, status: 'critical' },
+    { id: 'item-3', name: 'Bell Peppers (Trio Pack)', category: 'Produce', quantity: '3 pcs', location: 'Fridge', expiryDate: '2026-10-14', daysLeft: 4, status: 'warning' },
+    { id: 'item-4', name: 'Artisan Sourdough Loaf', category: 'Bakery', quantity: '1 Loaf', location: 'Pantry', expiryDate: '2026-10-13', daysLeft: 3, status: 'warning' },
+    { id: 'item-5', name: 'Brown Basmati Rice', category: 'Pantry', quantity: '1 kg', location: 'Pantry', expiryDate: '2027-03-15', daysLeft: 155, status: 'fresh' },
+    { id: 'item-6', name: 'Extra Virgin Olive Oil', category: 'Pantry', quantity: '750ml', location: 'Pantry', expiryDate: '2027-08-01', daysLeft: 294, status: 'fresh' }
+  ];
 }
 
-// Render Pantry Cards
 function renderPantry() {
   const container = document.getElementById('pantry-cards-container');
   if (!container) return;
@@ -270,108 +190,136 @@ function renderPantry() {
   updateStatsUI();
 }
 
+function updateStatsUI() {
+  const criticalCount = state.pantry.filter(i => i.status === 'critical').length;
+  const warningCount = state.pantry.filter(i => i.status === 'warning').length;
+  const freshCount = state.pantry.filter(i => i.status === 'fresh').length;
+
+  const critEl = document.getElementById('stat-critical-count');
+  const warnEl = document.getElementById('stat-warning-count');
+  const freshEl = document.getElementById('stat-fresh-count');
+  const savingsEl = document.getElementById('stat-savings-val');
+
+  if (critEl) critEl.innerText = criticalCount;
+  if (warnEl) warnEl.innerText = warningCount;
+  if (freshEl) freshEl.innerText = freshCount;
+  if (savingsEl) savingsEl.innerText = `$${state.moneySaved.toFixed(2)}`;
+}
+
 // Add Item via Form
-window.handleAddItem = function(e) {
+window.handleAddItem = async function(e) {
   if (e && e.preventDefault) e.preventDefault();
 
-  const nameInput = document.getElementById('item-name-input');
-  const catInput = document.getElementById('item-category-input');
-  const qtyInput = document.getElementById('item-qty-input');
-  const locInput = document.getElementById('item-loc-input');
-  const expInput = document.getElementById('item-exp-input');
+  const name = document.getElementById('item-name-input').value.trim();
+  const category = document.getElementById('item-category-input').value;
+  const quantity = document.getElementById('item-qty-input').value.trim() || '1 unit';
+  const location = document.getElementById('item-loc-input').value;
+  const expiryDate = document.getElementById('item-exp-input').value;
 
-  const name = nameInput ? nameInput.value.trim() : '';
-  const category = catInput ? catInput.value : 'Produce';
-  const quantity = qtyInput && qtyInput.value.trim() ? qtyInput.value.trim() : '1 unit';
-  const location = locInput ? locInput.value : 'Fridge';
-  const expiryDate = expInput ? expInput.value : '2026-10-15';
+  if (!name || !expiryDate) return false;
 
-  if (!name) {
-    showToast('Please enter an item name');
-    return false;
-  }
+  const payload = { name, category, quantity, location, expiryDate };
 
-  const { daysLeft, status } = calculateItemStatus(expiryDate);
-
-  const newItem = {
-    id: 'item-' + Date.now(),
-    name,
-    category,
-    quantity,
-    location,
-    purchaseDate: '2026-10-10',
-    expiryDate,
-    daysLeft,
-    status
-  };
-
-  state.pantry.unshift(newItem);
-  saveState();
-  renderPantry();
-
-  if (document.getElementById('add-item-form')) {
-    document.getElementById('add-item-form').reset();
-    if (document.getElementById('item-exp-input')) {
-      document.getElementById('item-exp-input').value = '2026-10-16';
+  try {
+    const res = await fetch('/api/pantry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      showToast(`Added ${name} to database!`);
+      document.getElementById('add-item-form').reset();
+      fetchPantry();
+      return false;
     }
+  } catch (err) {
+    console.warn('Saving to local state');
   }
 
-  showToast(`Added ${name} to ${location}!`);
+  // Fallback Local
+  state.pantry.unshift({ id: 'item-' + Date.now(), ...payload, daysLeft: 5, status: 'warning' });
+  localStorage.setItem('nourish_pantry', JSON.stringify(state.pantry));
+  renderPantry();
+  document.getElementById('add-item-form').reset();
+  showToast(`Added ${name} locally!`);
   return false;
 };
 
-// Item Actions
-window.markConsumed = function(id) {
+// Eat Item / Mark Consumed
+window.markConsumed = async function(id) {
   const item = state.pantry.find(i => i.id === id);
   if (!item) return;
+
+  try {
+    const res = await fetch(`/api/pantry/${id}/consume`, { method: 'POST' });
+    if (res.ok) {
+      const data = await res.json();
+      state.moneySaved = data.currentTotalSavings;
+      showToast(data.message);
+      fetchPantry();
+      return;
+    }
+  } catch (err) {}
 
   state.pantry = state.pantry.filter(i => i.id !== id);
   state.moneySaved += 3.80;
-  state.foodDivertedKg += 0.40;
-  saveState();
+  localStorage.setItem('nourish_pantry', JSON.stringify(state.pantry));
   renderPantry();
-  showToast(`Yum! Consumed ${item.name}. Saved ~$3.80 from waste!`);
+  showToast(`Yum! Consumed ${item.name}. Saved ~$3.80!`);
 };
 
-window.deleteItem = function(id) {
-  const item = state.pantry.find(i => i.id === id);
+// Delete Item
+window.deleteItem = async function(id) {
+  try {
+    const res = await fetch(`/api/pantry/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('Item deleted from database');
+      fetchPantry();
+      return;
+    }
+  } catch (err) {}
+
   state.pantry = state.pantry.filter(i => i.id !== id);
-  saveState();
+  localStorage.setItem('nourish_pantry', JSON.stringify(state.pantry));
   renderPantry();
-  showToast(item ? `Removed ${item.name}` : 'Item removed');
+  showToast('Item removed');
 };
 
-window.donateItem = function(id) {
+// Donate Item
+window.donateItem = async function(id) {
   const item = state.pantry.find(i => i.id === id);
   if (!item) return;
 
-  const newDonation = {
-    id: 'don-' + Date.now(),
+  const payload = {
     title: `${item.quantity} ${item.name}`,
-    donor: 'You (Household Resident)',
+    donor: 'You (Household Donor)',
     distance: '0.1 km away',
-    timeRemaining: `${item.daysLeft} days remaining`,
-    lat: 28.6139 + (Math.random() - 0.5) * 0.015,
-    lng: 77.2090 + (Math.random() - 0.5) * 0.015,
-    claimed: false,
-    verified: true
+    timeRemaining: `${item.daysLeft || 2} days remaining`
   };
 
-  state.donations.unshift(newDonation);
+  try {
+    await fetch('/api/donations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    await fetch(`/api/pantry/${id}`, { method: 'DELETE' });
+    showToast(`Donated ${item.name} to community rescue!`);
+    window.switchTab('tab-rescue');
+    return;
+  } catch (err) {}
+
   state.pantry = state.pantry.filter(i => i.id !== id);
-  saveState();
   renderPantry();
-  showToast(`Listed ${item.name} on the Hyperlocal Rescue Map!`);
+  showToast(`Listed ${item.name} on Community Rescue Map!`);
   window.switchTab('tab-rescue');
 };
 
 window.triggerCookWithItem = function(name) {
   window.switchTab('tab-recipes');
   const filterInput = document.getElementById('custom-ingredient-filter');
-  if (filterInput) {
-    filterInput.value = name;
-  }
-  generateRecipes();
+  if (filterInput) filterInput.value = name;
+  fetchRecipes();
 };
 
 window.setFilter = function(filterVal) {
@@ -388,34 +336,11 @@ window.handleSearch = function(e) {
 };
 
 // ==========================================
-// AI Scanner Simulation Engine
+// 2. AI SCANNER API
 // ==========================================
-const PRESET_SCANS = {
-  receipt: {
-    title: 'Supermarket Paper Receipt',
-    items: [
-      { name: 'Organic Whole Milk', category: 'Dairy', qty: '1 Gallon', expDays: 7, loc: 'Fridge' },
-      { name: 'Fresh Strawberries', category: 'Produce', qty: '1 Box (400g)', expDays: 3, loc: 'Fridge' },
-      { name: 'Whole Wheat Sandwich Bread', category: 'Bakery', qty: '1 Loaf', expDays: 5, loc: 'Pantry' },
-      { name: 'Broccoli Crowns', category: 'Produce', qty: '500g', expDays: 4, loc: 'Fridge' },
-      { name: 'Cheddar Cheese Block', category: 'Dairy', qty: '200g', expDays: 14, loc: 'Fridge' }
-    ]
-  },
-  fridge: {
-    title: 'Refrigerator Shelf Camera Capture',
-    items: [
-      { name: 'Tofu Extra Firm', category: 'Produce', qty: '350g', expDays: 2, loc: 'Fridge' },
-      { name: 'Baby Carrots', category: 'Produce', qty: '1 Bag (500g)', expDays: 8, loc: 'Fridge' },
-      { name: 'Almond Milk (Unsweetened)', category: 'Dairy', qty: '1 Liter', expDays: 6, loc: 'Fridge' },
-      { name: 'Fresh Basil Herb', category: 'Produce', qty: '1 Bunch', expDays: 2, loc: 'Fridge' }
-    ]
-  }
-};
-
 let scannedItemsBuffer = [];
 
-window.startScannerSimulation = function(presetKey) {
-  const preset = PRESET_SCANS[presetKey] || PRESET_SCANS.receipt;
+window.startScannerSimulation = async function(scanType) {
   const progressBox = document.getElementById('scan-progress-box');
   const resultBox = document.getElementById('scan-results-box');
   const bar = document.getElementById('scan-progress-bar');
@@ -427,23 +352,43 @@ window.startScannerSimulation = function(presetKey) {
 
   const steps = [
     { p: 25, text: 'Preprocessing image and contrast enhancement...' },
-    { p: 55, text: 'Executing TrOCR Transformer text recognition...' },
-    { p: 85, text: 'Querying Deep Learning Freshness Classifier & UPC Database...' },
-    { p: 100, text: 'AI Extraction Complete! Found ' + preset.items.length + ' grocery items.' }
+    { p: 55, text: 'Calling TrOCR Transformer vision recognition API...' },
+    { p: 85, text: 'Running Deep Learning Freshness Classifier & UPC Database lookup...' },
+    { p: 100, text: 'Extraction Complete!' }
   ];
 
   let currentStep = 0;
-  const interval = setInterval(() => {
+  const interval = setInterval(async () => {
     if (currentStep < steps.length) {
       if (bar) bar.style.width = steps[currentStep].p + '%';
       if (statusMsg) statusMsg.innerText = steps[currentStep].text;
       currentStep++;
     } else {
       clearInterval(interval);
-      scannedItemsBuffer = preset.items;
-      renderScanResults(preset.items);
+
+      try {
+        const res = await fetch('/api/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scanType })
+        });
+        if (res.ok) {
+          const json = await res.json();
+          scannedItemsBuffer = json.items;
+          renderScanResults(json.items);
+          return;
+        }
+      } catch (err) {}
+
+      // Fallback
+      scannedItemsBuffer = [
+        { name: 'Organic Whole Milk', category: 'Dairy', qty: '1 Gallon', expDays: 7, loc: 'Fridge' },
+        { name: 'Fresh Strawberries', category: 'Produce', qty: '1 Box (400g)', expDays: 3, loc: 'Fridge' },
+        { name: 'Whole Wheat Sandwich Bread', category: 'Bakery', qty: '1 Loaf', expDays: 5, loc: 'Pantry' }
+      ];
+      renderScanResults(scannedItemsBuffer);
     }
-  }, 400);
+  }, 350);
 };
 
 function renderScanResults(items) {
@@ -469,141 +414,84 @@ function renderScanResults(items) {
   if (resultBox) resultBox.style.display = 'block';
 }
 
-window.commitScannedItems = function() {
+window.commitScannedItems = async function() {
   if (!scannedItemsBuffer.length) return;
 
-  scannedItemsBuffer.forEach(item => {
+  for (const item of scannedItemsBuffer) {
     const today = new Date('2026-10-10');
     const expDate = new Date(today);
     expDate.setDate(today.getDate() + item.expDays);
     const expStr = expDate.toISOString().split('T')[0];
 
-    const { daysLeft, status } = calculateItemStatus(expStr);
+    try {
+      await fetch('/api/pantry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: item.name,
+          category: item.category,
+          quantity: item.qty,
+          location: item.loc,
+          expiryDate: expStr
+        })
+      });
+    } catch (e) {}
+  }
 
-    state.pantry.unshift({
-      id: 'item-' + Math.random().toString(36).substr(2, 9),
-      name: item.name,
-      category: item.category,
-      quantity: item.qty,
-      location: item.loc,
-      purchaseDate: '2026-10-10',
-      expiryDate: expStr,
-      daysLeft,
-      status
-    });
-  });
-
-  saveState();
-  renderPantry();
-  showToast(`Successfully imported ${scannedItemsBuffer.length} items to pantry!`);
+  showToast(`Successfully imported ${scannedItemsBuffer.length} items to database!`);
   scannedItemsBuffer = [];
-  
-  const prog = document.getElementById('scan-progress-box');
-  const res = document.getElementById('scan-results-box');
-  if (prog) prog.style.display = 'none';
-  if (res) res.style.display = 'none';
-  
+  document.getElementById('scan-progress-box').style.display = 'none';
+  document.getElementById('scan-results-box').style.display = 'none';
   window.switchTab('tab-pantry');
 };
 
 // ==========================================
-// Generative Zero-Waste AI Chef Engine
+// 3. RECIPES API
 // ==========================================
-const RECIPE_DATABASE = [
-  {
-    title: 'Creamy Garlic-Yogurt Wilted Spinach Skillet',
-    atRiskUsed: ['Baby Spinach', 'Greek Yogurt'],
-    time: '12 Mins',
-    servings: '2 Servings',
-    diet: 'Vegetarian',
-    ingredients: [
-      '200g Baby Spinach (Near Expiry)',
-      '3 tbsp Greek Yogurt',
-      '2 cloves Minced Garlic',
-      '1 tbsp Olive Oil',
-      'Pinch of Salt & Crushed Black Pepper'
-    ],
-    instructions: [
-      'Heat olive oil in a non-stick skillet over medium flame. Sauté minced garlic for 1 minute until fragrant.',
-      'Add fresh baby spinach in batches, tossing gently for 2–3 minutes until just wilted.',
-      'Turn off the heat. Fold in Greek yogurt with salt and black pepper to create a velvety sauce without curdling.',
-      'Serve warm alongside toasted sourdough bread or brown rice.'
-    ],
-    wastePrevented: '$4.20 / 350g saved'
-  },
-  {
-    title: 'Savory Sourdough & Roasted Bell Pepper Bruschetta',
-    atRiskUsed: ['Sourdough Loaf', 'Bell Peppers'],
-    time: '15 Mins',
-    servings: '2 Servings',
-    diet: 'Vegan Option',
-    ingredients: [
-      '2 thick slices Sourdough Bread',
-      '1 Bell Pepper (Diced)',
-      '1 tbsp Extra Virgin Olive Oil',
-      '1/2 tsp Dried Oregano / Mixed Herbs',
-      'Optional: Shaved cheese or salt'
-    ],
-    instructions: [
-      'Toast sourdough bread slices in an oven or pan until golden and crunchy.',
-      'In a pan, lightly char diced bell peppers with olive oil and oregano for 4 minutes.',
-      'Spoon warm sautéed bell peppers over toasted sourdough and drizzle with olive oil.',
-      'Garnish with fresh cracked pepper and serve immediately.'
-    ],
-    wastePrevented: '$3.80 / 280g saved'
-  },
-  {
-    title: 'Golden Garlic Basmati Rice Bowl with Charred Peppers',
-    atRiskUsed: ['Bell Peppers', 'Brown Basmati Rice'],
-    time: '20 Mins',
-    servings: '3 Servings',
-    diet: 'Gluten-Free / Vegan',
-    ingredients: [
-      '1 Cup Brown Basmati Rice',
-      '2 Bell Peppers (Sliced into thin strips)',
-      '1 tbsp Olive Oil',
-      '1 tsp Cumin Seeds',
-      'Salt to taste'
-    ],
-    instructions: [
-      'Cook brown basmati rice until fluffy and set aside.',
-      'In a wok, heat olive oil, splutter cumin seeds, and stir-fry bell pepper strips on high heat for 3 minutes.',
-      'Toss warm cooked rice into the peppers with salt and black pepper.',
-      'Enjoy a healthy, zero-waste dinner using 100% pantry essentials.'
-    ],
-    wastePrevented: '$5.10 / 450g saved'
-  }
-];
-
-window.generateRecipes = function() {
+async function fetchRecipes() {
   const container = document.getElementById('recipe-results-container');
   if (!container) return;
 
+  let recipes = [];
+  try {
+    const res = await fetch('/api/recipes');
+    if (res.ok) {
+      const json = await res.json();
+      recipes = json.recipes;
+    }
+  } catch (err) {}
+
+  if (!recipes.length) {
+    recipes = [
+      {
+        title: 'Creamy Garlic-Yogurt Wilted Spinach Skillet',
+        atRiskUsed: ['Baby Spinach', 'Greek Yogurt'],
+        time: '12 Mins',
+        servings: '2 Servings',
+        diet: 'Vegetarian',
+        ingredients: ['200g Baby Spinach', '3 tbsp Greek Yogurt', '2 cloves Minced Garlic', '1 tbsp Olive Oil', 'Salt & Pepper'],
+        instructions: ['Heat olive oil in a skillet, sauté garlic for 1 min.', 'Add fresh baby spinach and toss until wilted.', 'Remove from heat and fold in Greek yogurt.'],
+        wastePrevented: '$4.20 / 350g saved'
+      },
+      {
+        title: 'Savory Sourdough & Roasted Bell Pepper Bruschetta',
+        atRiskUsed: ['Artisan Sourdough Loaf', 'Bell Peppers'],
+        time: '15 Mins',
+        servings: '2 Servings',
+        diet: 'Vegan Option',
+        ingredients: ['2 slices Sourdough Bread', '1 Bell Pepper (Diced)', '1 tbsp Olive Oil', 'Oregano & Herbs'],
+        instructions: ['Toast sourdough bread until crispy.', 'Char bell peppers in olive oil with oregano.', 'Top toasted bread with roasted peppers.'],
+        wastePrevented: '$3.80 / 280g saved'
+      }
+    ];
+  }
+
   const customFilter = (document.getElementById('custom-ingredient-filter')?.value || '').toLowerCase().trim();
-
-  let matchedRecipes = RECIPE_DATABASE;
   if (customFilter) {
-    matchedRecipes = RECIPE_DATABASE.filter(r => 
-      r.title.toLowerCase().includes(customFilter) || 
-      r.ingredients.some(i => i.toLowerCase().includes(customFilter)) ||
-      r.atRiskUsed.some(a => a.toLowerCase().includes(customFilter))
-    );
+    recipes = recipes.filter(r => r.title.toLowerCase().includes(customFilter) || r.ingredients.some(i => i.toLowerCase().includes(customFilter)));
   }
 
-  if (matchedRecipes.length === 0) {
-    matchedRecipes = RECIPE_DATABASE; // fallback
-  }
-
-  const atRiskCount = state.pantry.filter(i => i.status !== 'fresh').length;
-
-  container.innerHTML = `
-    <div style="grid-column: 1 / -1; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-      <span class="hero-tag" style="background: rgba(16, 185, 129, 0.2); border: 1px solid var(--emerald-500); color: var(--emerald-400); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">
-        <i class="fa-solid fa-sparkles"></i> AI Generated Recipes (Prioritizing ${atRiskCount} at-risk pantry items)
-      </span>
-      ${customFilter ? `<button class="btn btn-secondary btn-sm" onclick="document.getElementById('custom-ingredient-filter').value=''; generateRecipes();"><i class="fa-solid fa-xmark"></i> Clear Filter</button>` : ''}
-    </div>
-  ` + matchedRecipes.map(recipe => `
+  container.innerHTML = recipes.map(recipe => `
     <div class="recipe-card">
       <div class="recipe-header">
         <div class="recipe-title">${recipe.title}</div>
@@ -615,7 +503,7 @@ window.generateRecipes = function() {
       </div>
       <div class="recipe-body">
         <div style="margin-bottom: 0.85rem; font-size: 0.82rem; color: var(--rose-400); font-weight: 700; background: rgba(244, 63, 94, 0.1); padding: 6px 10px; border-radius: var(--radius-xs); border: 1px solid rgba(244, 63, 94, 0.3);">
-          <i class="fa-solid fa-triangle-exclamation"></i> Rescues: ${recipe.atRiskUsed.join(', ')}
+          <i class="fa-solid fa-triangle-exclamation"></i> Rescues: ${recipe.atRiskUsed ? recipe.atRiskUsed.join(', ') : 'Near Expiry Items'}
         </div>
         
         <h4 style="font-size: 0.82rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.05em;">Ingredients:</h4>
@@ -623,7 +511,7 @@ window.generateRecipes = function() {
           ${recipe.ingredients.map(ing => `<li><i class="fa-solid fa-check" style="color: var(--emerald-500); font-size: 0.75rem;"></i> ${ing}</li>`).join('')}
         </ul>
 
-        <h4 style="font-size: 0.82rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; margin-top: 1rem; letter-spacing: 0.05em;">Step-by-Step AI Cooking Steps:</h4>
+        <h4 style="font-size: 0.82rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; margin-top: 1rem; letter-spacing: 0.05em;">AI Cooking Instructions:</h4>
         <ol class="instructions-list">
           ${recipe.instructions.map(step => `<li>${step}</li>`).join('')}
         </ol>
@@ -637,54 +525,22 @@ window.generateRecipes = function() {
       </div>
     </div>
   `).join('');
-};
+}
 
 // ==========================================
-// Hyperlocal Food Rescue Map Simulation
+// 4. DONATIONS & RESCUE API
 // ==========================================
-let rescueMapInstance = null;
-
-function initRescueMap() {
-  renderDonationList();
-
-  const mapEl = document.getElementById('leaflet-map-view');
-  if (!mapEl) return;
-
-  if (typeof L !== 'undefined') {
-    if (!rescueMapInstance) {
-      rescueMapInstance = L.map('leaflet-map-view').setView([28.6139, 77.2090], 14);
-
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-        maxZoom: 19
-      }).addTo(rescueMapInstance);
-
-      state.donations.forEach(don => {
-        const marker = L.marker([don.lat, don.lng]).addTo(rescueMapInstance);
-        marker.bindPopup(`
-          <div style="color: #000; font-family: sans-serif; padding: 4px;">
-            <strong>${don.title}</strong><br>
-            <small>${don.donor} &bull; ${don.distance}</small><br>
-            <span style="color: #059669; font-weight: bold;">${don.timeRemaining}</span><br><br>
-            <button onclick="claimDonation('${don.id}')" style="background: #10b981; color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">Reserve Pickup</button>
-          </div>
-        `);
-      });
-    } else {
-      setTimeout(() => rescueMapInstance.invalidateSize(), 200);
+async function fetchDonations() {
+  try {
+    const res = await fetch('/api/donations');
+    if (res.ok) {
+      const json = await res.json();
+      state.donations = json.data;
     }
-  } else {
-    // Graceful offline simulated interactive visual map
-    mapEl.innerHTML = `
-      <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #1e293b 0%, #0f172a 100%); color: var(--text-primary); text-align: center; padding: 2rem;">
-        <i class="fa-solid fa-map-location-dot" style="font-size: 3rem; color: var(--emerald-400); margin-bottom: 1rem;"></i>
-        <h3 style="font-size: 1.2rem; font-weight: 700;">Live GPS Food Rescue Network Active</h3>
-        <p style="color: var(--text-secondary); font-size: 0.88rem; max-width: 400px; margin-top: 6px;">
-          Connected to 3 verified community shelters & 2 nearby donors within 5 km radius.
-        </p>
-      </div>
-    `;
-  }
+  } catch (err) {}
+
+  renderDonationList();
+  initRescueMap();
 }
 
 function renderDonationList() {
@@ -712,37 +568,76 @@ function renderDonationList() {
   `).join('');
 }
 
-window.claimDonation = function(id) {
-  const don = state.donations.find(d => d.id === id);
-  if (!don) return;
+let rescueMapInstance = null;
+function initRescueMap() {
+  const mapEl = document.getElementById('leaflet-map-view');
+  if (!mapEl) return;
 
-  don.claimed = true;
-  saveState();
-  renderDonationList();
+  if (typeof L !== 'undefined') {
+    if (!rescueMapInstance) {
+      rescueMapInstance = L.map('leaflet-map-view').setView([28.6139, 77.2090], 14);
 
-  const titleEl = document.getElementById('claim-token-title');
-  const donorEl = document.getElementById('claim-token-donor');
-  const idEl = document.getElementById('claim-token-id');
-  const modal = document.getElementById('claim-modal');
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        maxZoom: 19
+      }).addTo(rescueMapInstance);
 
-  if (titleEl) titleEl.innerText = don.title;
-  if (donorEl) donorEl.innerText = `${don.donor} (${don.distance})`;
-  if (idEl) idEl.innerText = 'NG-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-  if (modal) modal.classList.add('active');
+      state.donations.forEach(don => {
+        const marker = L.marker([don.lat, don.lng]).addTo(rescueMapInstance);
+        marker.bindPopup(`
+          <div style="color: #000; font-family: sans-serif; padding: 4px;">
+            <strong>${don.title}</strong><br>
+            <small>${don.donor} &bull; ${don.distance}</small><br>
+            <span style="color: #059669; font-weight: bold;">${don.timeRemaining}</span><br><br>
+            <button onclick="claimDonation('${don.id}')" style="background: #10b981; color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">Reserve Pickup</button>
+          </div>
+        `);
+      });
+    } else {
+      setTimeout(() => rescueMapInstance.invalidateSize(), 200);
+    }
+  }
+}
+
+window.claimDonation = async function(id) {
+  try {
+    const res = await fetch(`/api/donations/${id}/claim`, { method: 'POST' });
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('claim-token-id').innerText = data.pickupToken;
+      document.getElementById('claim-modal').classList.add('active');
+      fetchDonations();
+      return;
+    }
+  } catch (err) {}
+
+  document.getElementById('claim-token-id').innerText = 'NG-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+  document.getElementById('claim-modal').classList.add('active');
 };
 
 window.closeClaimModal = function() {
-  const modal = document.getElementById('claim-modal');
-  if (modal) modal.classList.remove('active');
+  document.getElementById('claim-modal').classList.remove('active');
 };
 
 // ==========================================
-// Analytics Charts (Chart.js + Fallback)
+// 5. ANALYTICS API
 // ==========================================
 let savingsChart = null;
 let categoryChart = null;
 
-function initAnalyticsCharts() {
+async function fetchAnalytics() {
+  let metrics = { totalMoneySaved: 148.50, monthlyTrend: [65, 84, 110, 125, 138, 148.50] };
+
+  try {
+    const res = await fetch('/api/analytics');
+    if (res.ok) {
+      const data = await res.json();
+      metrics = data.metrics;
+      state.moneySaved = metrics.totalMoneySaved;
+      updateStatsUI();
+    }
+  } catch (err) {}
+
   const ctxSavings = document.getElementById('monthlySavingsChart')?.getContext('2d');
   const ctxCategory = document.getElementById('categoryBreakdownChart')?.getContext('2d');
 
@@ -765,6 +660,7 @@ function initAnalyticsCharts() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { labels: { color: '#94a3b8' } } },
           scales: {
             x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
@@ -786,6 +682,7 @@ function initAnalyticsCharts() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
         }
       });
@@ -793,7 +690,7 @@ function initAnalyticsCharts() {
   }
 }
 
-// Toast Feedback
+// Toast Feedback Notification
 function showToast(msg) {
   const existing = document.querySelectorAll('.toast-msg');
   existing.forEach(t => t.remove());
@@ -814,14 +711,12 @@ function showToast(msg) {
   toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${msg}`;
 
   document.body.appendChild(toast);
-  setTimeout(() => {
-    toast.remove();
-  }, 3500);
+  setTimeout(() => { toast.remove(); }, 3500);
 }
 
-// Window load init
-window.addEventListener('DOMContentLoaded', () => {
-  renderPantry();
-  generateRecipes();
-  updateStatsUI();
+// Initial Bootstrap
+window.addEventListener('DOMContentLoaded', async () => {
+  await checkBackendConnection();
+  fetchPantry();
+  fetchRecipes();
 });

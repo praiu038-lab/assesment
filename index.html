@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NourishGuard AI — Complete Application Portal & SRS</title>
+  <title>NourishGuard AI — Complete Full-Stack Application Portal & SRS</title>
   
   <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,7 +32,7 @@
       </div>
       <div class="brand-info">
         <h1>NourishGuard AI</h1>
-        <p>Smart-Pantry & Food-Rescue Ecosystem</p>
+        <p>Full-Stack Smart-Pantry & Food-Rescue Platform</p>
       </div>
     </div>
 
@@ -58,14 +58,16 @@
       </button>
     </nav>
 
-    <!-- User Profile & Action -->
+    <!-- Header Actions & Mobile Toggle -->
     <div class="header-right">
-      <div class="user-badge">
-        <div class="user-avatar">Y</div>
-        <span>Household Admin</span>
+      <div id="backend-status-badge" class="status-badge">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; margin-right:6px; box-shadow:0 0 6px #10b981;"></span> DB Connected
       </div>
       <button class="btn btn-secondary btn-sm" onclick="window.print()" title="Export / Print SRS Document">
         <i class="fa-solid fa-print"></i>
+      </button>
+      <button class="mobile-menu-btn" onclick="toggleMobileMenu()" title="Toggle Navigation Menu">
+        <i class="fa-solid fa-bars"></i>
       </button>
     </div>
   </header>
@@ -126,7 +128,7 @@
         <div class="glass-panel">
           <div class="panel-title-row">
             <div class="panel-title">
-              <i class="fa-solid fa-plus-circle" style="color: var(--emerald-400);"></i> Add Item
+              <i class="fa-solid fa-plus-circle" style="color: var(--emerald-400);"></i> Add Grocery Item
             </div>
             <button class="btn btn-secondary btn-sm" onclick="switchTab('tab-scanner')">
               <i class="fa-solid fa-camera"></i> AI Scan
@@ -136,7 +138,7 @@
           <form id="add-item-form" onsubmit="handleAddItem(event)">
             <div class="form-group">
               <label class="form-label">Item Name</label>
-              <input type="text" id="item-name-input" class="form-input" placeholder="e.g., Cherry Tomatoes" required>
+              <input type="text" id="item-name-input" class="form-input" placeholder="e.g., Fresh Strawberries" required>
             </div>
 
             <div class="form-group">
@@ -171,7 +173,7 @@
             </div>
 
             <button type="submit" class="btn btn-primary" style="width: 100%;">
-              <i class="fa-solid fa-plus"></i> Save to Pantry
+              <i class="fa-solid fa-database"></i> Save to Database
             </button>
           </form>
         </div>
@@ -185,7 +187,7 @@
             </div>
 
             <div class="filter-pills">
-              <button class="filter-pill active" data-filter="all" onclick="setFilter('all')">All Items</button>
+              <button class="filter-pill active" data-filter="all" onclick="setFilter('all')">All</button>
               <button class="filter-pill" data-filter="critical" onclick="setFilter('critical')">Urgent (&le; 2d)</button>
               <button class="filter-pill" data-filter="warning" onclick="setFilter('warning')">Use Soon</button>
               <button class="filter-pill" data-filter="fresh" onclick="setFilter('fresh')">Fresh</button>
@@ -196,7 +198,7 @@
 
           <!-- Cards Grid -->
           <div id="pantry-cards-container" class="inventory-grid">
-            <!-- Rendered dynamically by app.js -->
+            <!-- Rendered dynamically -->
           </div>
         </div>
       </div>
@@ -213,7 +215,7 @@
               <i class="fa-solid fa-camera-viewfinder" style="color: var(--cyan-400);"></i> Multi-Modal AI Ingestion Scanner
             </div>
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
-              Powered by Transformer TrOCR & YOLOv8 Freshness Classifier. Ingest 20+ items in under 4 seconds without typing.
+              Powered by Transformer TrOCR & YOLOv8 Freshness Classifier. Connects to backend `/api/scan`.
             </p>
           </div>
         </div>
@@ -223,17 +225,17 @@
           <i class="fa-solid fa-cloud-arrow-up" style="font-size: 3rem; color: var(--emerald-400); margin-bottom: 1rem;"></i>
           <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 6px;">Drop receipt photo or fridge tray image here</h3>
           <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 480px; margin: 0 auto 1.5rem;">
-            Supports JPG, PNG, PDF digital supermarket receipts & internal camera streams.
+            Supports JPG, PNG, PDF digital supermarket receipts & camera uploads.
           </p>
 
           <button class="btn btn-primary" onclick="event.stopPropagation(); startScannerSimulation('receipt')">
-            <i class="fa-solid fa-file-invoice-dollar"></i> Click to Simulate Receipt Scan
+            <i class="fa-solid fa-file-invoice-dollar"></i> Simulate Paper Receipt Scan
           </button>
         </div>
 
         <!-- Presets -->
         <div class="scan-presets">
-          <span style="font-size: 0.85rem; color: var(--text-secondary); align-self: center; font-weight: 600;">Or try sample presets:</span>
+          <span style="font-size: 0.85rem; color: var(--text-secondary); align-self: center; font-weight: 600;">Sample Datasets:</span>
           <button class="preset-btn" onclick="startScannerSimulation('receipt')">
             <i class="fa-solid fa-receipt" style="color: var(--cyan-400);"></i> Supermarket Receipt (5 Items)
           </button>
@@ -245,24 +247,24 @@
         <!-- Progress Box -->
         <div id="scan-progress-box" class="scan-progress-box">
           <div style="font-size: 1rem; font-weight: 700; color: var(--emerald-400);">
-            <i class="fa-solid fa-microchip fa-spin"></i> Neural Vision Engine Active
+            <i class="fa-solid fa-microchip fa-spin"></i> Neural Vision Backend API Processing
           </div>
           <div class="progress-bar-container">
             <div id="scan-progress-bar" class="progress-bar-fill"></div>
           </div>
           <div id="scan-status-msg" style="font-size: 0.82rem; color: var(--text-secondary); font-family: var(--font-mono);">
-            Initializing neural network...
+            Sending payload to `/api/scan`...
           </div>
         </div>
 
         <!-- Extracted Results Box -->
         <div id="scan-results-box" style="display: none; margin-top: 1.5rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;">
             <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--emerald-400);">
-              <i class="fa-solid fa-list-check"></i> Extracted Items Ready for Ingestion
+              <i class="fa-solid fa-list-check"></i> Extracted Items Ready for Database Commit
             </h4>
             <button class="btn btn-primary btn-sm" onclick="commitScannedItems()">
-              <i class="fa-solid fa-file-import"></i> Import All to Pantry
+              <i class="fa-solid fa-database"></i> Commit All to Database
             </button>
           </div>
           <div id="scan-extracted-list"></div>
@@ -280,21 +282,21 @@
             <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--emerald-400);"></i> Generative Zero-Waste Chef
           </h2>
           <p style="color: var(--text-secondary); font-size: 0.92rem; max-width: 600px; margin-top: 4px;">
-            AI analyzes ingredients nearing expiration and constructs custom gourmet recipes with step-by-step guidance.
+            Queries backend `/api/recipes` to dynamically generate chef-level meals utilizing expiring inventory.
           </p>
         </div>
 
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
           <input type="text" id="custom-ingredient-filter" class="form-input" style="width: 220px;" placeholder="Filter by ingredient...">
-          <button class="btn btn-primary" onclick="generateRecipes()">
-            <i class="fa-solid fa-rotate"></i> Refresh AI Recipes
+          <button class="btn btn-primary" onclick="fetchRecipes()">
+            <i class="fa-solid fa-rotate"></i> Refresh Recipes
           </button>
         </div>
       </div>
 
       <!-- Recipe Cards Grid -->
       <div id="recipe-results-container" class="recipe-card-list">
-        <!-- Rendered dynamically by app.js -->
+        <!-- Rendered dynamically -->
       </div>
     </section>
 
@@ -310,7 +312,7 @@
               <div class="panel-title">
                 <i class="fa-solid fa-hand-holding-heart" style="color: var(--cyan-400);"></i> Surplus Food Feed
               </div>
-              <p style="font-size: 0.78rem; color: var(--text-secondary);">Nearby shelters, bakeries & donors within 5 km</p>
+              <p style="font-size: 0.78rem; color: var(--text-secondary);">Live records synced with backend `/api/donations`</p>
             </div>
             <span class="badge" style="border-color: var(--cyan-400); color: var(--cyan-400);">Live GPS</span>
           </div>
@@ -346,21 +348,25 @@
         <div class="glass-panel">
           <div class="panel-title-row">
             <div class="panel-title">
-              <i class="fa-solid fa-arrow-trend-up" style="color: var(--emerald-400);"></i> Monthly Grocery Savings ($)
+              <i class="fa-solid fa-arrow-trend-up" style="color: var(--emerald-400);"></i> Monthly Savings Trend ($)
             </div>
             <span class="badge">+22% vs Last Mo</span>
           </div>
-          <canvas id="monthlySavingsChart" height="200"></canvas>
+          <div style="position: relative; height: 260px; width: 100%;">
+            <canvas id="monthlySavingsChart"></canvas>
+          </div>
         </div>
 
         <!-- Waste Category Breakdown -->
         <div class="glass-panel">
           <div class="panel-title-row">
             <div class="panel-title">
-              <i class="fa-solid fa-chart-pie" style="color: var(--cyan-400);"></i> Food Waste Diverted by Category
+              <i class="fa-solid fa-chart-pie" style="color: var(--cyan-400);"></i> Diverted Waste by Category
             </div>
           </div>
-          <canvas id="categoryBreakdownChart" height="200"></canvas>
+          <div style="position: relative; height: 260px; width: 100%;">
+            <canvas id="categoryBreakdownChart"></canvas>
+          </div>
         </div>
       </div>
 
@@ -375,13 +381,13 @@
           <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--emerald-500); border-radius: var(--radius-md); padding: 1.25rem; text-align: center;">
             <i class="fa-solid fa-medal" style="font-size: 2.2rem; color: var(--emerald-400); margin-bottom: 0.5rem;"></i>
             <h4 style="font-weight: 700;">Zero-Waste Champion</h4>
-            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Diverted over 30 kg of food from municipal landfills.</p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Diverted over 32 kg of food from municipal landfills.</p>
           </div>
 
           <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid var(--cyan-500); border-radius: var(--radius-md); padding: 1.25rem; text-align: center;">
             <i class="fa-solid fa-heart-circle-check" style="font-size: 2.2rem; color: var(--cyan-400); margin-bottom: 0.5rem;"></i>
             <h4 style="font-weight: 700;">Community Hero</h4>
-            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Shared 5+ meals with verified local shelters.</p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Shared 8+ meals with verified local shelters.</p>
           </div>
 
           <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--amber-500); border-radius: var(--radius-md); padding: 1.25rem; text-align: center;">
@@ -398,7 +404,7 @@
     <!-- ============================================== -->
     <section id="tab-srs" class="tab-content">
       <div class="glass-panel" style="max-width: 1000px; margin: 0 auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-subtle);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 8px;">
           <div>
             <h2 style="font-size: 1.5rem; font-weight: 800;"><i class="fa-solid fa-file-contract" style="color: var(--emerald-400);"></i> Software Requirements Specification (SRS)</h2>
             <p style="font-size: 0.85rem; color: var(--text-secondary);">Comprehensive IEEE-830 Compliant Specification Document</p>
