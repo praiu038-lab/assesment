@@ -1,174 +1,164 @@
-// Database Management Module (Persistent JSON/File-Based DB with ACID Atomic Operations)
-const fs = require('fs');
+// NourishGuard AI — SQLite Relational Database Engine
+const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const DB_FILE = path.join(__dirname, 'nourishguard_data.json');
-
-const INITIAL_DB = {
-  pantry_items: [
-    {
-      id: 'item-1',
-      name: 'Baby Spinach Leaves',
-      category: 'Produce',
-      quantity: '250g',
-      location: 'Fridge',
-      purchaseDate: '2026-10-06',
-      expiryDate: '2026-10-11',
-      status: 'critical'
-    },
-    {
-      id: 'item-2',
-      name: 'Greek Yogurt (Organic)',
-      category: 'Dairy',
-      quantity: '500g',
-      location: 'Fridge',
-      purchaseDate: '2026-10-04',
-      expiryDate: '2026-10-12',
-      status: 'critical'
-    },
-    {
-      id: 'item-3',
-      name: 'Bell Peppers (Trio Pack)',
-      category: 'Produce',
-      quantity: '3 pcs',
-      location: 'Fridge',
-      purchaseDate: '2026-10-07',
-      expiryDate: '2026-10-14',
-      status: 'warning'
-    },
-    {
-      id: 'item-4',
-      name: 'Artisan Sourdough Loaf',
-      category: 'Bakery',
-      quantity: '1 Loaf',
-      location: 'Pantry',
-      purchaseDate: '2026-10-08',
-      expiryDate: '2026-10-13',
-      status: 'warning'
-    },
-    {
-      id: 'item-5',
-      name: 'Brown Basmati Rice',
-      category: 'Pantry',
-      quantity: '1 kg',
-      location: 'Pantry',
-      purchaseDate: '2026-09-15',
-      expiryDate: '2027-03-15',
-      status: 'fresh'
-    },
-    {
-      id: 'item-6',
-      name: 'Extra Virgin Olive Oil',
-      category: 'Pantry',
-      quantity: '750ml',
-      location: 'Pantry',
-      purchaseDate: '2026-09-01',
-      expiryDate: '2027-08-01',
-      status: 'fresh'
-    }
-  ],
-  community_donations: [
-    {
-      id: 'don-1',
-      title: 'Surplus Fresh Baguettes (x8)',
-      donor: 'Greenfield Artisan Bakery',
-      distance: '0.8 km away',
-      timeRemaining: '3 hours left',
-      lat: 28.6139,
-      lng: 77.2090,
-      claimed: false,
-      claimedBy: null,
-      pickupToken: null,
-      createdAt: '2026-10-10T18:00:00Z'
-    },
-    {
-      id: 'don-2',
-      title: 'Fresh Vine Tomatoes & Cucumbers (4 kg)',
-      donor: 'Urban Community Greenhub',
-      distance: '1.4 km away',
-      timeRemaining: '5 hours left',
-      lat: 28.6219,
-      lng: 77.2190,
-      claimed: false,
-      claimedBy: null,
-      pickupToken: null,
-      createdAt: '2026-10-10T19:00:00Z'
-    },
-    {
-      id: 'don-3',
-      title: 'Sealed Whole Milk Cartons (x3)',
-      donor: 'Neighbor Sarah M.',
-      distance: '0.3 km away',
-      timeRemaining: '1 day left',
-      lat: 28.6080,
-      lng: 77.2020,
-      claimed: false,
-      claimedBy: null,
-      pickupToken: null,
-      createdAt: '2026-10-10T20:00:00Z'
-    }
-  ],
-  analytics: {
-    totalMoneySaved: 148.50,
-    totalFoodDivertedKg: 32.40,
-    totalMealsShared: 8,
-    categoryBreakdown: {
-      'Produce / Fresh Greens': 42,
-      'Dairy & Eggs': 28,
-      'Bakery': 15,
-      'Pantry Essentials': 10,
-      'Proteins': 5
-    },
-    monthlyTrend: [
-      { month: 'May', saved: 65 },
-      { month: 'Jun', saved: 84 },
-      { month: 'Jul', saved: 110 },
-      { month: 'Aug', saved: 125 },
-      { month: 'Sep', saved: 138 },
-      { month: 'Oct', saved: 148.50 }
-    ]
+const DB_PATH = path.join(__dirname, 'database.sqlite');
+const db = new sqlite3.Database(DB_PATH, (err) => {
+  if (err) {
+    console.error('[SQLite] Connection error:', err.message);
+  } else {
+    console.log('[SQLite] Connected to relational database file:', DB_PATH);
   }
+});
+
+// Initialize Tables and Seed Data
+function initDatabase() {
+  db.serialize(() => {
+    // 1. Users Table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE,
+        role TEXT DEFAULT 'household_user',
+        household_size INTEGER DEFAULT 3,
+        dietary_preferences TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 2. Pantry Items Table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS pantry_items (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        category TEXT,
+        quantity TEXT,
+        location TEXT,
+        purchase_date TEXT,
+        expiry_date TEXT NOT NULL,
+        is_consumed INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 3. Community Donations Table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS community_donations (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        donor TEXT,
+        distance TEXT,
+        time_remaining TEXT,
+        lat REAL,
+        lng REAL,
+        claimed INTEGER DEFAULT 0,
+        claimed_by TEXT,
+        pickup_token TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 4. Analytics & Impact Logs Table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS analytics_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        action_type TEXT,
+        item_name TEXT,
+        money_saved REAL DEFAULT 0,
+        food_diverted_kg REAL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Check & Seed Initial Pantry Items
+    db.get('SELECT COUNT(*) as count FROM pantry_items', (err, row) => {
+      if (!err && row && row.count === 0) {
+        console.log('[SQLite] Seeding initial pantry demo items...');
+        const stmt = db.prepare(`
+          INSERT INTO pantry_items (id, name, category, quantity, location, purchase_date, expiry_date)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        const initialItems = [
+          ['item-1', 'Baby Spinach Leaves', 'Produce', '250g', 'Fridge', '2026-10-06', '2026-10-11'],
+          ['item-2', 'Greek Yogurt (Organic)', 'Dairy', '500g', 'Fridge', '2026-10-04', '2026-10-12'],
+          ['item-3', 'Bell Peppers (Trio Pack)', 'Produce', '3 pcs', 'Fridge', '2026-10-07', '2026-10-14'],
+          ['item-4', 'Artisan Sourdough Loaf', 'Bakery', '1 Loaf', 'Pantry', '2026-10-08', '2026-10-13'],
+          ['item-5', 'Brown Basmati Rice', 'Pantry', '1 kg', 'Pantry', '2026-09-15', '2027-03-15'],
+          ['item-6', 'Extra Virgin Olive Oil', 'Pantry', '750ml', 'Pantry', '2026-09-01', '2027-08-01']
+        ];
+
+        initialItems.forEach(item => stmt.run(item));
+        stmt.finalize();
+      }
+    });
+
+    // Check & Seed Initial Community Donations
+    db.get('SELECT COUNT(*) as count FROM community_donations', (err, row) => {
+      if (!err && row && row.count === 0) {
+        console.log('[SQLite] Seeding initial community donations...');
+        const stmt = db.prepare(`
+          INSERT INTO community_donations (id, title, donor, distance, time_remaining, lat, lng, claimed)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        const initialDonations = [
+          ['don-1', 'Surplus Fresh Baguettes (x8)', 'Greenfield Artisan Bakery', '0.8 km away', '3 hours left', 28.6139, 77.2090, 0],
+          ['don-2', 'Fresh Vine Tomatoes & Cucumbers (4 kg)', 'Urban Community Greenhub', '1.4 km away', '5 hours left', 28.6219, 77.2190, 0],
+          ['don-3', 'Sealed Whole Milk Cartons (x3)', 'Neighbor Sarah M.', '0.3 km away', '1 day left', 28.6080, 77.2020, 0]
+        ];
+
+        initialDonations.forEach(don => stmt.run(don));
+        stmt.finalize();
+      }
+    });
+
+    // Check & Seed Initial Analytics Log
+    db.get('SELECT COUNT(*) as count FROM analytics_logs', (err, row) => {
+      if (!err && row && row.count === 0) {
+        db.run(`
+          INSERT INTO analytics_logs (action_type, item_name, money_saved, food_diverted_kg)
+          VALUES ('initial_baseline', 'Pantry Initialization', 148.50, 32.40)
+        `);
+      }
+    });
+  });
+}
+
+initDatabase();
+
+// Promisified Helper Functions
+const query = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
 };
 
-// Initialize DB file if not exists
-function initDB() {
-  if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(INITIAL_DB, null, 2), 'utf-8');
-    console.log('[Database] Initialized new persistent database:', DB_FILE);
-  } else {
-    console.log('[Database] Loaded existing database from:', DB_FILE);
-  }
-}
+const get = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+};
 
-// Read DB
-function readDB() {
-  try {
-    if (!fs.existsSync(DB_FILE)) {
-      initDB();
-    }
-    const raw = fs.readFileSync(DB_FILE, 'utf-8');
-    return JSON.parse(raw);
-  } catch (err) {
-    console.error('[Database] Read error:', err);
-    return INITIAL_DB;
-  }
-}
-
-// Write DB
-function writeDB(data) {
-  try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
-    return true;
-  } catch (err) {
-    console.error('[Database] Write error:', err);
-    return false;
-  }
-}
-
-initDB();
+const run = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) reject(err);
+      else resolve({ lastID: this.lastID, changes: this.changes });
+    });
+  });
+};
 
 module.exports = {
-  readDB,
-  writeDB,
-  initDB
+  db,
+  query,
+  get,
+  run
 };
